@@ -11,6 +11,7 @@
             --line: #212121;
             --panel: #ff5900;
             --card: #ff5900;
+            --bg-blur: 1.5px;
         }
 
         * { box-sizing: border-box; }
@@ -25,8 +26,36 @@
         }
 
         body {
+            position: relative;
             min-height: 100vh;
             background: var(--bg);
+        }
+
+        #siteBackgroundLayer {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0;
+            pointer-events: none;
+            filter: blur(var(--bg-blur)) brightness(0.8);
+            transition: opacity 0.18s ease;
+        }
+
+        body > *:not(#siteBackgroundLayer):not(#zoneViewer) {
+            position: relative;
+            z-index: 1;
+        }
+
+        body.halloween {
+            background-color: #0d0908;
+            color: #f5efe7;
+        }
+
+        body.halloween .zone-item img {
+            filter: saturate(1.15) contrast(1.05);
         }
 
         .main-nav {
@@ -124,6 +153,35 @@
             margin: 0 auto;
         }
 
+        .blur-control {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--fg);
+        }
+
+        .blur-control.hidden,
+        #disableThemeButton.hidden {
+            display: none;
+        }
+
+        .blur-control input[type="range"] {
+            width: 120px;
+            min-width: 120px;
+            margin: 0;
+            padding: 0;
+            accent-color: var(--panel);
+            cursor: pointer;
+        }
+
+        #disableThemeButton:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .site-settings input {
             min-height: 32px;
             border: 1px solid var(--line);
@@ -211,6 +269,7 @@
             cursor: pointer;
             min-height: 220px;
             transition: transform 0.18s ease, filter 0.18s ease, border-color 0.18s ease;
+            user-select: none;
         }
 
         .zone-item:hover {
@@ -248,13 +307,23 @@
             opacity: 0.98;
         }
 
+        body.zone-open {
+            overflow: hidden;
+        }
+
         #zoneViewer {
             position: fixed;
-            inset: 0;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100vw;
+            height: 100vh;
             background: var(--bg);
             z-index: 20;
             display: none;
             flex-direction: column;
+            overflow: hidden;
         }
 
         .zone-header {
@@ -354,6 +423,8 @@
         </div>
     </div>
 
+    <div id="siteBackgroundLayer" aria-hidden="true"></div>
+
     <div class="site-settings">
         <label>
             <span>Title</span>
@@ -363,15 +434,18 @@
             <span>Favicon</span>
             <input id="faviconInput" type="text" value="" placeholder="https://example.com/favicon.png" aria-label="Favicon URL">
         </label>
-        <button id="applySiteSettingsButton" type="button">Apply</button>
+        <label>
+            <span>BG Image</span>
+            <input id="bgImageInput" type="file" accept="image/*" aria-label="Custom background image">
+        </label>
+        <label class="blur-control">
+            <span>Blur</span>
+            <input id="bgBlurInput" type="range" min="0" max="8" step="0.5" value="1.5" aria-label="Background blur amount">
+        </label>
+        <button id="disableThemeButton" type="button">Disable Theme</button>
     </div>
 
     <main>
-        <details id="featuredZonesWrapper" open>
-            <summary>Featured Games</summary>
-            <div id="featuredZones"></div>
-        </details>
-
         <details id="allZonesWrapper" open>
             <summary>All Games</summary>
             <div id="container">Loading...</div>
@@ -408,9 +482,14 @@
         const panelColor = document.getElementById('panelColor');
         const siteTitleInput = document.getElementById('siteTitleInput');
         const faviconInput = document.getElementById('faviconInput');
-        const applySiteSettingsButton = document.getElementById('applySiteSettingsButton');
+        const bgImageInput = document.getElementById('bgImageInput');
+        const bgBlurInput = document.getElementById('bgBlurInput');
+        const disableThemeButton = document.getElementById('disableThemeButton');
+        const siteBackgroundLayer = document.getElementById('siteBackgroundLayer');
         let zoneFrame = document.getElementById('zoneFrame');
         const INITIAL_VISIBLE_GAMES = 120;
+        const DEFAULT_HALLOWEEN_BG = 'grunge-halloween-background-with-evil-pumpkins-scary-ghost_1048-12867.avif';
+        const FALLBACK_IMAGE = 'agus4.png';
         let renderList = [];
         let visibleCount = INITIAL_VISIBLE_GAMES;
 
@@ -420,6 +499,14 @@
             line: '#212121',
             panel: '#ff5900',
             card: '#ff5900'
+        };
+
+        const halloweenPalette = {
+            bg: '#110b0a',
+            fg: '#f8f1d0',
+            line: '#4a2c1d',
+            panel: '#ff7a1a',
+            card: '#ff7a1a'
         };
 
         function applyPalette(palette) {
@@ -436,13 +523,32 @@
                 root.style.setProperty(key, value);
             });
 
-            document.body.style.background = values['--bg'];
-            localStorage.setItem('gamesitePalette', JSON.stringify(values));
+            if (!document.body.classList.contains('halloween')) {
+                document.body.style.background = values['--bg'];
+                localStorage.setItem('gamesitePalette', JSON.stringify(values));
+            } else {
+                document.body.style.background = '';
+            }
         }
 
         function loadPalette() {
             try {
                 const stored = JSON.parse(localStorage.getItem('gamesitePalette') || '{}');
+                const hasStaleHalloweenPalette = stored['--bg'] === halloweenPalette.bg &&
+                    stored['--fg'] === halloweenPalette.fg &&
+                    stored['--line'] === halloweenPalette.line &&
+                    stored['--panel'] === halloweenPalette.panel;
+
+                if (hasStaleHalloweenPalette) {
+                    localStorage.setItem('gamesitePalette', JSON.stringify({
+                        '--bg': defaultPalette.bg,
+                        '--fg': defaultPalette.fg,
+                        '--line': defaultPalette.line,
+                        '--panel': defaultPalette.panel,
+                        '--card': defaultPalette.card
+                    }));
+                }
+
                 const palette = {
                     bg: stored['--bg'] || defaultPalette.bg,
                     fg: stored['--fg'] || defaultPalette.fg,
@@ -473,6 +579,184 @@
                     });
                 });
             });
+        }
+
+        function applyBackgroundBlur(valueOverride) {
+            const rawValue = Number.parseFloat(valueOverride ?? localStorage.getItem('aguGamesBgBlur') ?? '1.5');
+            const safeValue = Number.isFinite(rawValue) ? rawValue : 1.5;
+            const clampedValue = Math.min(8, Math.max(0, safeValue));
+            const root = document.documentElement;
+            root.style.setProperty('--bg-blur', `${clampedValue}px`);
+            if (bgBlurInput) {
+                bgBlurInput.value = String(clampedValue);
+            }
+            localStorage.setItem('aguGamesBgBlur', String(clampedValue));
+            return clampedValue;
+        }
+
+        function applyBackgroundImage(url) {
+            const trimmed = String(url || '').trim();
+            const safeUrl = trimmed || '';
+            const customBg = localStorage.getItem('aguGamesCustomBg') || '';
+            const halloweenOn = document.body.classList.contains('halloween');
+            const activeUrl = halloweenOn ? (customBg || DEFAULT_HALLOWEEN_BG) : (safeUrl || customBg || '');
+
+            if (siteBackgroundLayer) {
+                if (activeUrl) {
+                    siteBackgroundLayer.style.backgroundImage = `url("${activeUrl}")`;
+                    siteBackgroundLayer.style.opacity = '1';
+                    siteBackgroundLayer.style.display = 'block';
+                } else {
+                    siteBackgroundLayer.style.backgroundImage = 'none';
+                    siteBackgroundLayer.style.opacity = '0';
+                    siteBackgroundLayer.style.display = 'none';
+                }
+            }
+
+            if (!halloweenOn && !safeUrl && !customBg) {
+                document.body.style.background = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#121212';
+            }
+        }
+
+        function updateDisableThemeButton() {
+            if (!disableThemeButton) return;
+            const halloweenOn = document.body.classList.contains('halloween');
+            const customBgSet = !!String(localStorage.getItem('aguGamesCustomBg') || '').trim();
+            const hasActiveImage = halloweenOn || customBgSet;
+            disableThemeButton.classList.toggle('hidden', !hasActiveImage);
+            disableThemeButton.disabled = !hasActiveImage;
+            disableThemeButton.textContent = halloweenOn ? 'Disable Halloween' : customBgSet ? 'Disable Background' : 'No Image Theme';
+
+            if (bgBlurInput) {
+                bgBlurInput.parentElement.classList.toggle('hidden', !hasActiveImage);
+            }
+        }
+
+        function disableImageTheme() {
+            const halloweenOn = document.body.classList.contains('halloween');
+            const customBgSet = !!String(localStorage.getItem('aguGamesCustomBg') || '').trim();
+
+            if (halloweenOn) {
+                localStorage.setItem('aguGamesHalloween', JSON.stringify(false));
+                applyHalloweenTheme(false);
+                return;
+            }
+
+            if (customBgSet) {
+                localStorage.removeItem('aguGamesCustomBg');
+                applyBackgroundImage('');
+            }
+            updateDisableThemeButton();
+        }
+
+        function applyHalloweenTheme(enabled) {
+            document.body.classList.toggle('halloween', enabled);
+
+            const stored = JSON.parse(localStorage.getItem('gamesitePalette') || '{}');
+            const currentPalette = {
+                bg: stored['--bg'] || defaultPalette.bg,
+                fg: stored['--fg'] || defaultPalette.fg,
+                line: stored['--line'] || defaultPalette.line,
+                panel: stored['--panel'] || defaultPalette.panel,
+                card: stored['--card'] || stored['--panel'] || defaultPalette.card
+            };
+
+            if (!enabled) {
+                bgColor.value = currentPalette.bg;
+                fgColor.value = currentPalette.fg;
+                lineColor.value = currentPalette.line;
+                panelColor.value = currentPalette.panel;
+                applyPalette(currentPalette);
+            }
+
+            const customBg = localStorage.getItem('aguGamesCustomBg');
+            if (enabled) {
+                applyBackgroundImage(customBg || DEFAULT_HALLOWEEN_BG);
+            } else {
+                applyBackgroundImage(customBg || '');
+            }
+            localStorage.setItem('aguGamesHalloween', JSON.stringify(enabled));
+            updateDisableThemeButton();
+        }
+
+        function loadHalloweenTheme() {
+            const storedValue = localStorage.getItem('aguGamesHalloween');
+            if (storedValue === null) {
+                localStorage.setItem('aguGamesHalloween', JSON.stringify(false));
+                applyHalloweenTheme(false);
+                return;
+            }
+
+            try {
+                applyHalloweenTheme(JSON.parse(storedValue));
+            } catch (error) {
+                localStorage.setItem('aguGamesHalloween', JSON.stringify(false));
+                applyHalloweenTheme(false);
+            }
+        }
+
+        function loadCustomBackground() {
+            const saved = localStorage.getItem('aguGamesCustomBg');
+            if (saved && String(saved).trim()) {
+                applyBackgroundImage(saved);
+                updateDisableThemeButton();
+                return;
+            }
+
+            localStorage.removeItem('aguGamesCustomBg');
+            applyBackgroundImage('');
+            updateDisableThemeButton();
+        }
+
+        function syncBackgroundState() {
+            applyBackgroundBlur();
+            loadCustomBackground();
+        }
+
+        function toggleHalloweenTheme() {
+            const next = !document.body.classList.contains('halloween');
+            applyHalloweenTheme(next);
+        }
+
+        function initializeHalloweenSecret() {
+            let typed = '';
+            const trigger = 'halloween';
+
+            document.addEventListener('keydown', (event) => {
+                const key = event.key.toLowerCase();
+                if (!key || key.length !== 1 && key !== 'backspace') return;
+
+                if (key === trigger[typed.length]) {
+                    typed += key;
+                    if (typed === trigger) {
+                        toggleHalloweenTheme();
+                        typed = '';
+                    }
+                } else {
+                    typed = key === trigger[0] ? key : '';
+                }
+            });
+
+            const logo = document.querySelector('.logo');
+            if (logo) {
+                logo.addEventListener('click', () => {
+                    toggleHalloweenTheme();
+                });
+            }
+        }
+
+        function handleBackgroundUpload(event) {
+            const [file] = event.target.files || [];
+            if (!file || !file.type.startsWith('image/')) return;
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                const result = String(reader.result || '');
+                localStorage.setItem('aguGamesCustomBg', result);
+                applyBackgroundImage(result);
+                updateDisableThemeButton();
+            };
+            reader.readAsDataURL(file);
         }
 
         function normalizeFaviconInput(raw) {
@@ -641,8 +925,26 @@
                     '#sidebarad1',
                     '#sidebarad2',
                     '.sidebar-close',
-                    '[onclick*="parentElement.style.display"]',
-                    '[onclick*="style.display"]'
+                    '[id*="ad"]',
+                    '[class*="ad"]',
+                    '[class*="ads"]',
+                    'iframe[src*="doubleclick"]',
+                    'iframe[src*="googlesyndication"]',
+                    'iframe[src*="securepubads"]',
+                    'script[src*="googletagmanager"]',
+                    'script[src*="google-analytics"]',
+                    'script[src*="googlesyndication"]',
+                    'script[src*="doubleclick"]',
+                    'script[src*="adsystem"]',
+                    'script[src*="adservice"]',
+                    'script[src*="googleservices"]',
+                    'script[src*="securepubads"]',
+                    'script[src*="cloak"]',
+                    'script[src*="mae"]',
+                    'script[src*="analytics"]',
+                    'link[href*="googlesyndication"]',
+                    'link[href*="doubleclick"]',
+                    'link[href*="ads"]'
                 ];
 
                 blockedSelectors.forEach(selector => {
@@ -656,14 +958,49 @@
                         src.includes('googletagmanager') ||
                         src.includes('googlesyndication') ||
                         src.includes('doubleclick') ||
-                        src.includes('adsystem') ||
+                        src.includes('google-analytics') ||
+                        src.includes('adsbygoogle') ||
                         src.includes('adservice') ||
+                        src.includes('adsystem') ||
+                        src.includes('googleadservices') ||
+                        src.includes('securepubads') ||
+                        src.includes('cloak') ||
+                        src.includes('mae') ||
+                        src.includes('analytics') ||
                         text.includes('sidebarad') ||
                         text.includes('sidebar-close') ||
                         text.includes('googletagmanager') ||
-                        text.includes('google-analytics')
+                        text.includes('google-analytics') ||
+                        text.includes('gtag(') ||
+                        text.includes('datalayer') ||
+                        text.includes('adsbygoogle') ||
+                        text.includes('googlesyndication') ||
+                        text.includes('doubleclick') ||
+                        text.includes('securepubads') ||
+                        text.includes('maeexportapis_') ||
+                        text.includes('cloak') ||
+                        text.includes('window.parent.mae')
                     ) {
                         script.remove();
+                    }
+                });
+
+                doc.querySelectorAll('style').forEach(style => {
+                    const css = (style.textContent || '').toLowerCase();
+                    if (
+                        css.includes('sidebarad') ||
+                        css.includes('googletagmanager') ||
+                        css.includes('googlesyndication') ||
+                        css.includes('doubleclick') ||
+                        css.includes('google-analytics') ||
+                        css.includes('adsbygoogle') ||
+                        css.includes('securepubads') ||
+                        css.includes('cloak') ||
+                        css.includes('maeexportapis') ||
+                        css.includes('adslot') ||
+                        css.includes('ad-wrap')
+                    ) {
+                        style.remove();
                     }
                 });
 
@@ -676,12 +1013,19 @@
 
         function attachCoverFallback(img, item) {
             img.onerror = () => {
-                item.classList.add('missing');
-                img.remove();
+                if (img.src !== location.origin + '/' + FALLBACK_IMAGE && img.src !== location.origin + FALLBACK_IMAGE && img.currentSrc !== location.origin + '/' + FALLBACK_IMAGE && img.currentSrc !== FALLBACK_IMAGE) {
+                    img.src = FALLBACK_IMAGE;
+                    img.onerror = null;
+                    return;
+                }
+
+                if (item) item.classList.add('missing');
+                img.style.display = 'none';
             };
         }
 
         function displayFeaturedZones(featuredZones) {
+            if (!featuredContainer) return;
             featuredContainer.innerHTML = '';
             if (!featuredZones.length) {
                 featuredContainer.textContent = '';
@@ -691,7 +1035,9 @@
             featuredZones.forEach(file => {
                 const item = document.createElement('div');
                 item.className = 'zone-item';
-                item.onclick = () => openZone(file);
+                item.tabIndex = 0;
+                item.dataset.zoneId = String(file.id);
+                item.style.pointerEvents = 'auto';
 
                 const img = document.createElement('img');
                 img.src = makeAssetURL(file.cover);
@@ -703,10 +1049,7 @@
                 const button = document.createElement('button');
                 button.textContent = file.name;
                 button.type = 'button';
-                button.onclick = event => {
-                    event.stopPropagation();
-                    openZone(file);
-                };
+                button.dataset.zoneId = String(file.id);
 
                 item.appendChild(img);
                 item.appendChild(button);
@@ -720,7 +1063,9 @@
             list.forEach(file => {
                 const item = document.createElement('div');
                 item.className = 'zone-item';
-                item.onclick = () => openZone(file);
+                item.tabIndex = 0;
+                item.dataset.zoneId = String(file.id);
+                item.style.pointerEvents = 'auto';
 
                 const img = document.createElement('img');
                 img.src = makeAssetURL(file.cover);
@@ -731,11 +1076,8 @@
 
                 const button = document.createElement('button');
                 button.type = 'button';
+                button.dataset.zoneId = String(file.id);
                 button.innerHTML = highlightMatch(file.name, query);
-                button.onclick = event => {
-                    event.stopPropagation();
-                    openZone(file);
-                };
 
                 item.appendChild(img);
                 item.appendChild(button);
@@ -798,7 +1140,9 @@
             }
 
             const featured = zones.filter(z => z.featured);
-            displayFeaturedZones(featured);
+            if (featuredContainer) {
+                displayFeaturedZones(featured);
+            }
             visibleCount = INITIAL_VISIBLE_GAMES;
             renderVisibleZones(zones);
             refreshFeaturedVisibility();
@@ -881,6 +1225,10 @@
         }
 
         function resetZoneFrame() {
+            if (zoneLoadTimeout) {
+                clearTimeout(zoneLoadTimeout);
+                zoneLoadTimeout = null;
+            }
             if (!zoneFrame || !zoneFrame.isConnected) return;
 
             const parent = zoneFrame.parentNode;
@@ -897,6 +1245,8 @@
             zoneFrame = replacement;
         }
 
+        let zoneLoadTimeout = null;
+
         function openZone(file) {
             const url = makeAssetURL(file.url);
 
@@ -907,6 +1257,21 @@
             }
 
             resetZoneFrame();
+            zoneLoadTimeout = setTimeout(() => {
+                if (zoneViewer.style.display !== 'none') {
+                    console.warn('Game load timed out; opening in a new tab instead.', url);
+                    window.open(url, '_blank', 'noopener');
+                    closeZone();
+                }
+            }, 15000);
+
+            zoneFrame.onload = () => {
+                if (zoneLoadTimeout) {
+                    clearTimeout(zoneLoadTimeout);
+                    zoneLoadTimeout = null;
+                }
+            };
+
             fetch(url + '?t=' + Date.now(), { cache: 'no-store' })
                 .then(response => {
                     if (!response.ok) throw new Error('HTTP ' + response.status);
@@ -914,13 +1279,18 @@
                 })
                 .then(html => {
                     const cleaned = sanitizeGameHTML(html);
-                    if (cleaned && cleaned.includes('<html')) {
+                    const looksLikeGameOutput = cleaned && cleaned.includes('<html') && (
+                        /window\.runGame|game\.js|createUnityInstance|Unity|canvas|WebGL|application|<script/i.test(cleaned)
+                    );
+
+                    if (looksLikeGameOutput) {
                         zoneFrame.srcdoc = cleaned;
                     } else {
                         zoneFrame.src = url;
                     }
                     document.getElementById('zoneName').textContent = file.name;
                     document.getElementById('zoneId').textContent = file.id;
+                    document.body.classList.add('zone-open');
                     zoneViewer.style.display = 'flex';
                 })
                 .catch(() => {
@@ -928,6 +1298,7 @@
                     if (url && url !== 'https://example.com') {
                         window.open(url, '_blank', 'noopener');
                     } else {
+                        document.body.classList.remove('zone-open');
                         zoneViewer.style.display = 'none';
                         container.textContent = 'This game is unavailable, but the site is still running normally.';
                     }
@@ -936,6 +1307,7 @@
 
         function closeZone() {
             resetZoneFrame();
+            document.body.classList.remove('zone-open');
             zoneViewer.style.display = 'none';
         }
 
@@ -1009,16 +1381,66 @@
             }
         }
 
+        const openZoneFromCard = (event) => {
+            const item = event.target && event.target.closest ? event.target.closest('.zone-item') : null;
+            if (!item) return;
+            const zoneId = Number(item.dataset.zoneId);
+            const zone = zones.find(entry => Number(entry.id) === zoneId);
+            if (!zone) return;
+            if (event.target && event.target.closest && event.target.closest('button')) {
+                event.stopPropagation();
+            }
+            openZone(zone);
+        };
+
+        const bindCardInteraction = (root) => {
+            if (!root) return;
+            root.addEventListener('click', openZoneFromCard);
+            root.addEventListener('pointerup', openZoneFromCard);
+            root.addEventListener('keydown', (event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') return;
+                const target = event.target && event.target.closest ? event.target.closest('.zone-item') : null;
+                if (!target) return;
+                event.preventDefault();
+                const zoneId = Number(target.dataset.zoneId);
+                const zone = zones.find(entry => Number(entry.id) === zoneId);
+                if (zone) openZone(zone);
+            });
+        };
+
+        bindCardInteraction(container);
+        if (featuredContainer) {
+            bindCardInteraction(featuredContainer);
+        }
+
         searchBar.addEventListener('input', filterZones);
         sortOptions.addEventListener('change', sortZones);
         filterOptions.addEventListener('change', filterZones2);
         siteTitleInput.addEventListener('input', applySiteSettings);
         faviconInput.addEventListener('input', applySiteSettings);
-        applySiteSettingsButton.addEventListener('click', applySiteSettings);
+        if (bgImageInput) {
+            bgImageInput.addEventListener('change', (event) => {
+                handleBackgroundUpload(event);
+                updateDisableThemeButton();
+            });
+        }
+        if (bgBlurInput) {
+            bgBlurInput.addEventListener('input', (event) => {
+                const value = Number.parseFloat(event.target.value);
+                applyBackgroundBlur(value);
+            });
+        }
+        if (disableThemeButton) {
+            disableThemeButton.addEventListener('click', disableImageTheme);
+        }
 
         bindPaletteInputs();
         loadPalette();
+        loadHalloweenTheme();
+        syncBackgroundState();
         loadSiteSettings();
+        initializeHalloweenSecret();
+        updateDisableThemeButton();
         listZones();
     </script>
 </body>

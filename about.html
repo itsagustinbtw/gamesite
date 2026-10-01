@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>About | AGU Games</title>
+  <title>About</title>
   <style>
     :root {
       --bg: #121212;
@@ -11,6 +11,7 @@
       --line: #212121;
       --panel: #ff5900;
       --card: #ff5900;
+      --bg-blur: 1.5px;
     }
 
     * { box-sizing: border-box; }
@@ -25,7 +26,25 @@
     }
 
     body {
+      position: relative;
       background: var(--bg);
+    }
+
+    #siteBackgroundLayer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0;
+      pointer-events: none;
+      filter: blur(var(--bg-blur)) brightness(0.8);
+    }
+
+    body > *:not(#siteBackgroundLayer) {
+      position: relative;
+      z-index: 1;
     }
 
     a {
@@ -159,9 +178,9 @@
     }
 
     .content-block {
-      margin-top: 24px;
-      border-top: 1px solid var(--line);
-      padding-top: 18px;
+      margin-top: 0;
+      border-top: none;
+      padding-top: 0;
     }
 
     .content-block h2 {
@@ -173,6 +192,15 @@
       margin: 0;
       color: rgba(255, 255, 255, 0.76);
       max-width: 900px;
+    }
+
+    .suggestion-link {
+      color: #4da3ff;
+      text-decoration: underline;
+    }
+
+    .suggestion-link:hover {
+      text-decoration: underline;
     }
 
     .editable-note {
@@ -192,6 +220,8 @@
   </style>
 </head>
 <body>
+  <div id="siteBackgroundLayer" aria-hidden="true"></div>
+
   <header class="topbar">
     <div class="wrap nav">
       <div class="brand">AGU Games</div>
@@ -204,48 +234,30 @@
   </header>
 
   <main>
-    <section class="hero">
-      <div>
-        <p class="eyebrow">About</p>
-        <h1>Built for quick play and clean browsing.</h1>
-        <p class="lead">
-          Edit this text to describe your site, your brand, and what players can expect when they visit.
-          You can replace the paragraph below with your own story, intro, or mission statement.
-        </p>
-      </div>
-
-      <div class="photo-box">
-        <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=900&q=80" alt="Gaming setup" />
-      </div>
-    </section>
-
-    <div class="card-grid">
-      <article class="card">
-        <span class="editable-note">Edit card 1</span>
-        <h2>What we do</h2>
-        <p>Replace this text with your main description, your focus, or the type of games your site is known for.</p>
-      </article>
-
-      <article class="card">
-        <span class="editable-note">Edit card 2</span>
-        <h2>How we work</h2>
-        <p>Replace this with your process, your value, or the way your site keeps things fast and easy to use.</p>
-      </article>
-
-      <article class="card">
-        <span class="editable-note">Edit card 3</span>
-        <h2>Why players stay</h2>
-        <p>Replace this with your message about experience, simplicity, or the community you are building.</p>
-      </article>
-    </div>
-
-    <section class="content-block">
-      <span class="editable-note">Main content block</span>
+     
+      
       <h2>About the site</h2>
       <p>
-        This is the main editable section. Replace this paragraph with your own story, your brand message, or any important details you want visitors to see when they open the About page.
+        AGU Games is made because I hate the ad filled, clickbait, and scammy nature of other unlocked game sites. I want to create a site where you can just play games, without the annoying ads, tracking and AI garbage.
+        
       </p>
+   
+
+    <section class="hero">
+     
+      </div>
+
+     
     </section>
+    <img src="./agus4.png" alt="Photo of my cat" class="photo-box"  width="30%"> 
+    <p><br>
+        online suggestion box where you can submit your ideas or feedback for the site. I will read every submission and consider them for future updates. You can submit your suggestions <a class="suggestion-link" href="https://freesuggestionbox.com/pub/hdwdaip">here</a>.
+        <br>
+        <br>
+        (if games are not working or loading keep in mind that these games are hosted on other sites (like gn-math) and I have no control over them, so if they are down or not working it is not my fault. I will try to remove any broken games as soon as I can. also this site is currently in beta and I am the only one working on it so expect some issues.)
+    </p>
+
+   
   </main>
 
   <script>
@@ -256,6 +268,8 @@
       panel: '#ff5900',
       card: '#ff5900'
     };
+
+    const DEFAULT_HALLOWEEN_BG = 'grunge-halloween-background-with-evil-pumpkins-scary-ghost_1048-12867.avif';
 
     function applyPalette(palette) {
       const root = document.documentElement;
@@ -275,6 +289,31 @@
       localStorage.setItem('gamesitePalette', JSON.stringify(values));
     }
 
+    function applyBackgroundBlur(valueOverride) {
+      const rawValue = Number.parseFloat(valueOverride ?? localStorage.getItem('aguGamesBgBlur') ?? '1.5');
+      const safeValue = Number.isFinite(rawValue) ? rawValue : 1.5;
+      const clampedValue = Math.min(8, Math.max(0, safeValue));
+      document.documentElement.style.setProperty('--bg-blur', `${clampedValue}px`);
+      localStorage.setItem('aguGamesBgBlur', String(clampedValue));
+    }
+
+    function applyPageBackground() {
+      const layer = document.getElementById('siteBackgroundLayer');
+      if (!layer) return;
+
+      const customBg = localStorage.getItem('aguGamesCustomBg');
+      const halloweenOn = JSON.parse(localStorage.getItem('aguGamesHalloween') || 'false');
+      const active = halloweenOn ? (customBg || DEFAULT_HALLOWEEN_BG) : (customBg || '');
+
+      if (active) {
+        layer.style.backgroundImage = `url("${active}")`;
+        layer.style.opacity = '1';
+      } else {
+        layer.style.backgroundImage = 'none';
+        layer.style.opacity = '0';
+      }
+    }
+
     function loadPalette() {
       try {
         const stored = JSON.parse(localStorage.getItem('gamesitePalette') || '{}');
@@ -289,11 +328,14 @@
       } catch (error) {
         applyPalette(defaultPalette);
       }
+      applyPageBackground();
     }
 
+    applyBackgroundBlur();
     loadPalette();
     window.addEventListener('storage', (event) => {
-      if (event.key === 'gamesitePalette') {
+      if (event.key === 'gamesitePalette' || event.key === 'aguGamesCustomBg' || event.key === 'aguGamesHalloween' || event.key === 'aguGamesBgBlur') {
+        applyBackgroundBlur();
         loadPalette();
       }
     });

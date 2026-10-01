@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>News & Updates | AGU Games</title>
+  <title>News</title>
   <style>
     :root {
       --bg: #121212;
@@ -11,6 +11,7 @@
       --line: #212121;
       --panel: #ff5900;
       --card: #ff5900;
+      --bg-blur: 1.5px;
     }
 
     * { box-sizing: border-box; }
@@ -25,7 +26,25 @@
     }
 
     body {
+      position: relative;
       background: var(--bg);
+    }
+
+    #siteBackgroundLayer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0;
+      pointer-events: none;
+      filter: blur(var(--bg-blur)) brightness(0.8);
+    }
+
+    body > *:not(#siteBackgroundLayer) {
+      position: relative;
+      z-index: 1;
     }
 
     a {
@@ -159,9 +178,9 @@
     }
 
     .section {
-      margin-top: 26px;
-      border-top: 1px solid var(--line);
-      padding-top: 18px;
+      margin-top: 0;
+      border-top: none;
+      padding-top: 0;
     }
 
     .section h2 {
@@ -185,6 +204,8 @@
   </style>
 </head>
 <body>
+  <div id="siteBackgroundLayer" aria-hidden="true"></div>
+
   <header class="topbar">
     <div class="wrap nav">
       <div class="brand">AGU Games</div>
@@ -197,48 +218,25 @@
   </header>
 
   <main>
-    <section class="hero">
-      <p class="eyebrow">News + updates</p>
-      <h1>Latest updates from the site.</h1>
-      <p>Update this text whenever you want to change the page intro, announcements, or general message.</p>
-    </section>
+    
+      
+     <p> welcome to the news page I will be updating this page with the latest news and updates about the site. </p>
+      
+    
 
-    <div class="news-grid">
-      <article class="story">
-        <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=900&q=80" alt="Game update" />
-        <div class="story-body">
-          <span class="story-date">Edit date</span>
-          <h2>Story title</h2>
-          <p>Replace this paragraph with your update, release note, announcement, or any message you want to share with visitors.</p>
-        </div>
-      </article>
-
-      <article class="story">
-        <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=900&q=80" alt="Gaming content" />
-        <div class="story-body">
-          <span class="story-date">Edit date</span>
-          <h2>Another story</h2>
-          <p>Use this card pattern to add more entries whenever you want to post updates or highlight new content.</p>
-        </div>
-      </article>
-
-      <article class="story">
-        <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80" alt="News and updates" />
-        <div class="story-body">
-          <span class="story-date">Edit date</span>
-          <h2>New update</h2>
-          <p>Replace this block with an announcement, a gameplay note, a release date, or a site message you want to feature.</p>
-        </div>
-      </article>
-    </div>
-
-    <section class="section">
-      <span class="editable-note">Edit this block</span>
-      <h2>Update notes</h2>
-      <p>
-        This is the section where you can write future notes, announce changes, or keep visitors informed about what is new on the site.
+   
+    
+      <span class="editable-note">release notes</span>
+         
+    <p>
+        1.15 - added custom background support and a secret halloween theme when you type "halloween" also fixed some bugs, made stuff more efficient and added background blur.
+    
       </p>
-    </section>
+      
+      <p>
+        1.00 - initial release of the site. (buggy, but don't worry, I will be updating the site to fix bugs and add new features.)
+      </p>
+   
   </main>
 
   <script>
@@ -249,6 +247,8 @@
       panel: '#ff5900',
       card: '#ff5900'
     };
+
+    const DEFAULT_HALLOWEEN_BG = 'grunge-halloween-background-with-evil-pumpkins-scary-ghost_1048-12867.avif';
 
     function applyPalette(palette) {
       const root = document.documentElement;
@@ -268,6 +268,31 @@
       localStorage.setItem('gamesitePalette', JSON.stringify(values));
     }
 
+    function applyBackgroundBlur(valueOverride) {
+      const rawValue = Number.parseFloat(valueOverride ?? localStorage.getItem('aguGamesBgBlur') ?? '1.5');
+      const safeValue = Number.isFinite(rawValue) ? rawValue : 1.5;
+      const clampedValue = Math.min(8, Math.max(0, safeValue));
+      document.documentElement.style.setProperty('--bg-blur', `${clampedValue}px`);
+      localStorage.setItem('aguGamesBgBlur', String(clampedValue));
+    }
+
+    function applyPageBackground() {
+      const layer = document.getElementById('siteBackgroundLayer');
+      if (!layer) return;
+
+      const customBg = localStorage.getItem('aguGamesCustomBg');
+      const halloweenOn = JSON.parse(localStorage.getItem('aguGamesHalloween') || 'false');
+      const active = halloweenOn ? (customBg || DEFAULT_HALLOWEEN_BG) : (customBg || '');
+
+      if (active) {
+        layer.style.backgroundImage = `url("${active}")`;
+        layer.style.opacity = '1';
+      } else {
+        layer.style.backgroundImage = 'none';
+        layer.style.opacity = '0';
+      }
+    }
+
     function loadPalette() {
       try {
         const stored = JSON.parse(localStorage.getItem('gamesitePalette') || '{}');
@@ -282,11 +307,14 @@
       } catch (error) {
         applyPalette(defaultPalette);
       }
+      applyPageBackground();
     }
 
+    applyBackgroundBlur();
     loadPalette();
     window.addEventListener('storage', (event) => {
-      if (event.key === 'gamesitePalette') {
+      if (event.key === 'gamesitePalette' || event.key === 'aguGamesCustomBg' || event.key === 'aguGamesHalloween' || event.key === 'aguGamesBgBlur') {
+        applyBackgroundBlur();
         loadPalette();
       }
     });
