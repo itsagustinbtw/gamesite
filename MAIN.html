@@ -6,11 +6,11 @@
     <title>AGU Games</title>
     <style>
         :root {
-            --bg: #000000;
+            --bg: #121212;
             --fg: #ffffff;
-            --line: #000000;
-            --panel: #000000;
-            --card: #000000;
+            --line: #212121;
+            --panel: #ff5900;
+            --card: #ff5900;
         }
 
         * { box-sizing: border-box; }
@@ -540,7 +540,7 @@
                 if (!Number.isFinite(id) || id < 0) return false;
 
                 const name = String(zone.name || '');
-                const blocked = /(\[!\]|COMMENTS|SUGGEST|CHAT BOT|CHATBOT|GPT|A\.I\.|AI\b|ARTIFICIAL INTELLIGENCE|ASSISTANT|SPONSOR|ADS?\b|PROMO)/i;
+                const blocked = /(\[!\]|COMMENTS|SUGGEST|SPONSOR|ADS?\b|PROMO)/i;
                 return !blocked.test(name);
             });
         }

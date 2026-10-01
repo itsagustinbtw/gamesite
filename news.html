@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>News & Updates | AGU Games</title>
+  <style>
+    :root {
+      --bg: #121212;
+      --fg: #ffffff;
+      --line: #212121;
+      --panel: #ff5900;
+      --card: #ff5900;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.6;
+    }
+    a { color: var(--fg); }
+    .topbar {
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 12px 18px;
+    }
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .brand {
+      font-size: 0.95rem;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .links {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .links a {
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.75rem;
+      opacity: 0.92;
+    }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 18px 60px;
+    }
+    .hero {
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: clamp(2.1rem, 5vw, 3.8rem);
+      line-height: 1.06;
+    }
+    .hero p {
+      margin: 0;
+      color: rgba(255,255,255,0.76);
+    }
+    .news-grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+    .story {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.02);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .story img {
+      display: block;
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-bottom: 1px solid var(--line);
+    }
+    .story-body {
+      padding: 18px;
+    }
+    .story-date {
+      display: inline-block;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 10px;
+    }
+    .story h2 {
+      margin: 0 0 10px;
+      font-size: 1.2rem;
+    }
+    .story p {
+      margin: 0;
+      color: rgba(255,255,255,0.75);
+    }
+    .section {
+      margin-top: 28px;
+      border-top: 1px solid var(--line);
+      padding-top: 18px;
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap nav">
+      <div class="brand">AGU Games</div>
+      <nav class="links" aria-label="Main navigation">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="news.html">News</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>News & Updates</h1>
+      <p>Update this section anytime with new releases, site changes, or community news.</p>
+    </section>
+
+    <div class="news-grid">
+      <article class="story">
+        <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=900&q=80" alt="Game update" />
+        <div class="story-body">
+          <span class="story-date">October 2026</span>
+          <h2>Site refresh is live</h2>
+          <p>
+            <!-- Edit this paragraph -->
+            The main layout has been refreshed with a cleaner look, new navigation, and easier access to games and information.
+          </p>
+        </div>
+      </article>
+
+      <article class="story">
+        <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=900&q=80" alt="Gaming content" />
+        <div class="story-body">
+          <span class="story-date">September 2026</span>
+          <h2>More games are being added</h2>
+          <p>
+            <!-- Edit this paragraph -->
+            New content is being added regularly, with the site kept focused on speed, simplicity, and smooth play.
+          </p>
+        </div>
+      </article>
+
+      <article class="story">
+        <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80" alt="News and updates" />
+        <div class="story-body">
+          <span class="story-date">August 2026</span>
+          <h2>Player experience improvements</h2>
+          <p>
+            <!-- Edit this paragraph -->
+            Better browsing options, better game categories, and more updates are being added to improve the overall experience.
+          </p>
+        </div>
+      </article>
+    </div>
+
+    <section class="section">
+      <h2>Update notes</h2>
+      <p>
+        <!-- Edit this section for future notes -->
+        Add new stories here whenever you want to post updates, announcements, release notes, or site improvements.
+      </p>
+    </section>
+  </main>
+</body>
+</html>
