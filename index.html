@@ -9,8 +9,8 @@
             --bg: #121212;
             --fg: #ffffff;
             --line: #212121;
-            --panel: #ff7300;
-            --card: #121212;
+            --panel: #ff5900;
+            --card: #ff5900;
         }
 
         * { box-sizing: border-box; }
@@ -69,6 +69,29 @@
             flex: 1;
             gap: 8px;
             max-width: 760px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-left: auto;
+        }
+
+        .nav-links button {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: transparent;
+            color: var(--fg);
+            padding: 7px 10px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.7rem;
+        }
+
+        .nav-links button.active {
+            background: rgba(255, 255, 255, 0.08);
         }
 
         .customizer {
@@ -160,6 +183,82 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 12px 14px 28px;
+        }
+
+        .page-panel {
+            display: none;
+        }
+
+        .page-panel.active {
+            display: block;
+        }
+
+        .page-hero {
+            border: 1px solid var(--line);
+            background: var(--panel);
+            padding: 18px 20px;
+            margin: 18px 0 20px;
+        }
+
+        .page-hero h2 {
+            margin: 0 0 8px;
+            font-size: clamp(1.8rem, 3vw, 3rem);
+            letter-spacing: -0.04em;
+        }
+
+        .page-hero p {
+            margin: 0;
+            max-width: 720px;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+        }
+
+        .story-card,
+        .news-card {
+            border: 1px solid var(--line);
+            background: var(--card);
+            overflow: hidden;
+        }
+
+        .story-card img,
+        .news-card img {
+            display: block;
+            width: 100%;
+            aspect-ratio: 16 / 10;
+            object-fit: cover;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .story-card .copy,
+        .news-card .copy {
+            padding: 14px 14px 16px;
+        }
+
+        .story-card h3,
+        .news-card h3 {
+            margin: 0 0 8px;
+            font-size: 1.15rem;
+        }
+
+        .story-card p,
+        .news-card p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.78);
+            line-height: 1.6;
+        }
+
+        .news-meta {
+            display: inline-block;
+            margin-bottom: 8px;
+            font-size: 0.72rem;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.7);
         }
 
         details {
@@ -307,6 +406,11 @@
     <header>
         <div class="header-content">
             <div class="logo">AGU Games</div>
+            <div class="nav-links" aria-label="Site sections">
+                <button type="button" class="page-button active" data-page="home">Home</button>
+                <button type="button" class="page-button" data-page="about">About</button>
+                <button type="button" class="page-button" data-page="news">News</button>
+            </div>
             <div class="search-container">
                 <input type="text" id="searchBar" placeholder="Search games..." aria-label="Search games">
                 <select id="sortOptions" aria-label="Sort games">
@@ -346,15 +450,33 @@
     </div>
 
     <main>
-        <details id="featuredZonesWrapper" open>
-            <summary>Featured Games</summary>
-            <div id="featuredZones"></div>
-        </details>
+        <section id="homePage" class="page-panel active">
+            <details id="featuredZonesWrapper" open>
+                <summary>Featured Games</summary>
+                <div id="featuredZones"></div>
+            </details>
 
-        <details id="allZonesWrapper" open>
-            <summary>All Games</summary>
-            <div id="container">Loading...</div>
-        </details>
+            <details id="allZonesWrapper" open>
+                <summary>All Games</summary>
+                <div id="container">Loading...</div>
+            </details>
+        </section>
+
+        <section id="aboutPage" class="page-panel">
+            <div class="page-hero">
+                <h2>About the site</h2>
+                <p>We built this space for quick, clean play with a simple goal: fast loading, easy access, and a layout you can customize without clutter.</p>
+            </div>
+            <div id="aboutContent" class="content-grid"></div>
+        </section>
+
+        <section id="newsPage" class="page-panel">
+            <div class="page-hero">
+                <h2>News and updates</h2>
+                <p>Fresh changes, improvements, and community notes for the site. Update this section anytime by editing the news data in the script below.</p>
+            </div>
+            <div id="newsContent" class="content-grid"></div>
+        </section>
     </main>
 
     <div id="zoneViewer">
@@ -398,7 +520,7 @@
             fg: '#ffffff',
             line: '#212121',
             panel: '#ff5900',
-            card: '#121212'
+            card: '#ff5900'
         };
 
         function applyPalette(palette) {
@@ -427,7 +549,7 @@
                     fg: stored['--fg'] || defaultPalette.fg,
                     line: stored['--line'] || defaultPalette.line,
                     panel: stored['--panel'] || defaultPalette.panel,
-                    card: stored['--card'] || defaultPalette.card
+                    card: (stored['--card'] && stored['--card'] !== '#121212' && stored['--card'] !== '#000000') ? stored['--card'] : (stored['--panel'] || defaultPalette.card)
                 };
 
                 bgColor.value = palette.bg;
@@ -527,12 +649,6 @@
             applySiteSettings();
         }
 
-        const zonesurls = [
-            'https://raw.githubusercontent.com/gn-math/assets/main/zones.json',
-            'https://raw.githubusercontent.com/gn-math/assets/master/zones.json',
-            'https://cdn.jsdelivr.net/gh/gn-math/assets@main/zones.json'
-        ];
-
         const fallbackGames = [
             { id: 1, name: 'Mini Racer', cover: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80', url: 'https://example.com', featured: true, special: ['arcade'] },
             { id: 2, name: 'Math Sprint', cover: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80', url: 'https://example.com', special: ['math'] },
@@ -540,9 +656,45 @@
             { id: 4, name: 'Reaction Run', cover: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80', url: 'https://example.com', special: ['arcade'] }
         ];
 
-        const coverURL = 'https://raw.githubusercontent.com/gn-math/covers/main';
-        const htmlURL = 'https://raw.githubusercontent.com/gn-math/html/main';
-        let zonesURL = zonesurls[0];
+        const siteAbout = [
+            {
+                title: 'Built for quick play',
+                text: 'Everything loads fast and stays easy to scan, so visitors can jump into games without getting lost in clutter.',
+                image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=900&q=80'
+            },
+            {
+                title: 'Easy to personalize',
+                text: 'You can update the content here by editing the arrays in the script at the bottom of this page whenever you want new text, images, or calls to action.',
+                image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80'
+            },
+            {
+                title: 'Clean layout',
+                text: 'The site keeps the focus on games, links, and updates while staying minimal, readable, and simple to maintain.',
+                image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?auto=format&fit=crop&w=900&q=80'
+            }
+        ];
+
+        const siteNews = [
+            {
+                date: 'October 2026',
+                title: 'New challenge lineup',
+                text: 'A fresh batch of game cards and challenge content is now live for quick access and smoother browsing.',
+                image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=900&q=80'
+            },
+            {
+                date: 'Site update',
+                title: 'Theme polish',
+                text: 'The default palette now opens with the correct orange panel styling and the game grid matches the full site theme on first load.',
+                image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=900&q=80'
+            },
+            {
+                date: 'Maintenance',
+                title: 'Improved stability',
+                text: 'Game cards now load more safely and fallback content keeps the site running smoothly even when remote data is unavailable.',
+                image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80'
+            }
+        ];
+
         let zones = [];
         let popularityData = {};
 
@@ -553,7 +705,7 @@
                 if (!Number.isFinite(id) || id < 0) return false;
 
                 const name = String(zone.name || '');
-                const blocked = /(\[!\]|COMMENTS|SUGGEST|CHAT BOT|CHATBOT|GPT|A\.I\.|AI\b|ARTIFICIAL INTELLIGENCE|ASSISTANT|SPONSOR|ADS?\b|PROMO)/i;
+                const blocked = /(\[!\]|COMMENTS|SUGGEST|CHAT BOT|CHATBOT|ASSISTANT|SPONSOR|ADS?\b|PROMO)/i;
                 return !blocked.test(name);
             });
         }
@@ -605,8 +757,7 @@
 
         function makeAssetURL(path) {
             if (!path) return '';
-            if (path.startsWith('http')) return path;
-            return path.replace('{COVER_URL}', coverURL).replace('{HTML_URL}', htmlURL);
+            return path;
         }
 
         function sanitizeGameHTML(rawHtml) {
@@ -800,53 +951,12 @@
         }
 
         async function listZones() {
-            let lastError = null;
-
-            for (const candidate of zonesurls) {
-                try {
-                    const response = await fetch(candidate + '?t=' + Date.now(), { cache: 'no-store' });
-                    if (!response.ok) throw new Error('HTTP ' + response.status);
-
-                    const json = await response.json();
-                    if (!Array.isArray(json) || !json.length) throw new Error('Empty game list');
-
-                    zonesURL = candidate;
-                    zones = normalizeZones(json);
-                    if (!zones.length) throw new Error('No valid games found');
-                    zones[0].featured = true;
-
-                    setTimeout(() => {
-                        Promise.allSettled([
-                            fetchPopularity('year'),
-                            fetchPopularity('month'),
-                            fetchPopularity('week'),
-                            fetchPopularity('day')
-                        ]);
-                    }, 250);
-
-                    const tags = [...new Set(zones.flatMap(zone => Array.isArray(zone.special) ? zone.special : []))];
-                    filterOptions.innerHTML = '<option value="none">All tags</option>';
-                    tags.forEach(tag => {
-                        const opt = document.createElement('option');
-                        opt.value = tag;
-                        opt.textContent = toTitleCase(tag);
-                        filterOptions.appendChild(opt);
-                    });
-
-                    sortZones();
-                    return;
-                } catch (error) {
-                    lastError = error;
-                    console.warn('Catalog fetch failed for', candidate, error);
-                }
-            }
-
-            console.error('All catalog sources failed:', lastError);
             zones = normalizeZones(fallbackGames);
             if (!zones.length) {
                 container.textContent = 'Error loading games.';
                 return;
             }
+
             zones[0].featured = true;
             filterOptions.innerHTML = '<option value="none">All tags</option>';
             const tags = [...new Set(zones.flatMap(zone => Array.isArray(zone.special) ? zone.special : []))];
@@ -988,6 +1098,53 @@
             }
         }
 
+        function renderAboutPage() {
+            const containerEl = document.getElementById('aboutContent');
+            if (!containerEl) return;
+            containerEl.innerHTML = siteAbout.map(item => `
+                <article class="story-card">
+                    <img src="${item.image}" alt="${item.title}">
+                    <div class="copy">
+                        <h3>${item.title}</h3>
+                        <p>${item.text}</p>
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        function renderNewsPage() {
+            const containerEl = document.getElementById('newsContent');
+            if (!containerEl) return;
+            containerEl.innerHTML = siteNews.map(item => `
+                <article class="news-card">
+                    <img src="${item.image}" alt="${item.title}">
+                    <div class="copy">
+                        <span class="news-meta">${item.date}</span>
+                        <h3>${item.title}</h3>
+                        <p>${item.text}</p>
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        function setActivePage(pageName) {
+            document.querySelectorAll('.page-button').forEach(button => {
+                button.classList.toggle('active', button.dataset.page === pageName);
+            });
+
+            document.querySelectorAll('.page-panel').forEach(panel => {
+                panel.classList.toggle('active', panel.id === pageName + 'Page');
+            });
+
+            if (pageName === 'home') {
+                document.getElementById('searchBar').focus();
+            }
+        }
+
+        document.querySelectorAll('.page-button').forEach(button => {
+            button.addEventListener('click', () => setActivePage(button.dataset.page));
+        });
+
         searchBar.addEventListener('input', filterZones);
         sortOptions.addEventListener('change', sortZones);
         filterOptions.addEventListener('change', filterZones2);
@@ -998,6 +1155,9 @@
         bindPaletteInputs();
         loadPalette();
         loadSiteSettings();
+        renderAboutPage();
+        renderNewsPage();
+        setActivePage('home');
         listZones();
     </script>
 </body>
