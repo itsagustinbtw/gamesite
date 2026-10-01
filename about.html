@@ -10,7 +10,7 @@
       --fg: #ffffff;
       --line: #212121;
       --panel: #ff5900;
-      --card: #121212;
+      --card: #ff5900;
     }
 
     * { box-sizing: border-box; }
@@ -111,10 +111,10 @@
 
     .photo-box {
       border: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.02);
+      background: var(--bg);
       min-height: 280px;
       overflow: hidden;
-      border-radius: 18px;
+      border-radius: 0;
     }
 
     .photo-box img {
@@ -133,8 +133,8 @@
 
     .card {
       border: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.02);
-      border-radius: 16px;
+      background: var(--card);
+      border-radius: 0;
       padding: 18px;
     }
 
