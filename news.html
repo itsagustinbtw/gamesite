@@ -10,18 +10,25 @@
       --fg: #ffffff;
       --line: #212121;
       --panel: #ff5900;
-      --card: #ff5900;
+      --card: #121212;
     }
 
     * { box-sizing: border-box; }
-    body {
+
+    html, body {
       margin: 0;
+      min-height: 100vh;
       background: var(--bg);
       color: var(--fg);
       font-family: Arial, Helvetica, sans-serif;
       line-height: 1.6;
     }
-    a { color: var(--fg); }
+
+    a {
+      color: var(--fg);
+      text-decoration: none;
+    }
+
     .topbar {
       background: var(--panel);
       border-bottom: 1px solid var(--line);
@@ -29,11 +36,13 @@
       top: 0;
       z-index: 20;
     }
+
     .wrap {
       max-width: 1100px;
       margin: 0 auto;
       padding: 12px 18px;
     }
+
     .nav {
       display: flex;
       align-items: center;
@@ -41,52 +50,73 @@
       gap: 14px;
       flex-wrap: wrap;
     }
+
     .brand {
       font-size: 0.95rem;
       letter-spacing: 0.08em;
       font-weight: 700;
       text-transform: uppercase;
+      color: var(--fg);
     }
+
     .links {
       display: flex;
       gap: 16px;
       flex-wrap: wrap;
     }
+
     .links a {
-      text-decoration: none;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       font-size: 0.75rem;
-      opacity: 0.92;
+      opacity: 0.96;
     }
+
     main {
       max-width: 1100px;
       margin: 0 auto;
-      padding: 28px 18px 60px;
+      padding: 26px 18px 60px;
     }
+
     .hero {
       margin-bottom: 24px;
     }
-    .hero h1 {
+
+    .eyebrow {
       margin: 0 0 10px;
-      font-size: clamp(2.1rem, 5vw, 3.8rem);
-      line-height: 1.06;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--fg);
+      opacity: 0.8;
     }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+    }
+
     .hero p {
       margin: 0;
-      color: rgba(255,255,255,0.76);
+      color: rgba(255, 255, 255, 0.76);
+      max-width: 720px;
     }
+
     .news-grid {
       display: grid;
       gap: 18px;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     }
+
     .story {
       border: 1px solid var(--line);
-      background: rgba(255,255,255,0.02);
+      background: rgba(255, 255, 255, 0.02);
       border-radius: 16px;
       overflow: hidden;
     }
+
     .story img {
       display: block;
       width: 100%;
@@ -94,29 +124,53 @@
       object-fit: cover;
       border-bottom: 1px solid var(--line);
     }
+
     .story-body {
       padding: 18px;
     }
+
     .story-date {
       display: inline-block;
+      margin-bottom: 10px;
       font-size: 0.72rem;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.8);
-      margin-bottom: 10px;
+      color: rgba(255, 255, 255, 0.8);
     }
+
     .story h2 {
       margin: 0 0 10px;
       font-size: 1.2rem;
     }
+
     .story p {
       margin: 0;
-      color: rgba(255,255,255,0.75);
+      color: rgba(255, 255, 255, 0.75);
     }
+
     .section {
       margin-top: 28px;
       border-top: 1px solid var(--line);
       padding-top: 18px;
+    }
+
+    .section h2 {
+      margin: 0 0 10px;
+      font-size: 1.5rem;
+    }
+
+    .section p {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.74);
+    }
+
+    .editable-note {
+      display: inline-block;
+      margin-bottom: 12px;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.62);
     }
   </style>
 </head>
@@ -134,53 +188,45 @@
 
   <main>
     <section class="hero">
-      <h1>News & Updates</h1>
-      <p>Update this section anytime with new releases, site changes, or community news.</p>
+      <p class="eyebrow">News + updates</p>
+      <h1>Latest updates from the site.</h1>
+      <p>Update this text whenever you want to change the page intro, announcements, or general message.</p>
     </section>
 
     <div class="news-grid">
       <article class="story">
         <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=900&q=80" alt="Game update" />
         <div class="story-body">
-          <span class="story-date">October 2026</span>
-          <h2>Site refresh is live</h2>
-          <p>
-            <!-- Edit this paragraph -->
-            The main layout has been refreshed with a cleaner look, new navigation, and easier access to games and information.
-          </p>
+          <span class="story-date">Edit date</span>
+          <h2>Story title</h2>
+          <p>Replace this paragraph with your update, release note, announcement, or any message you want to share with visitors.</p>
         </div>
       </article>
 
       <article class="story">
         <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=900&q=80" alt="Gaming content" />
         <div class="story-body">
-          <span class="story-date">September 2026</span>
-          <h2>More games are being added</h2>
-          <p>
-            <!-- Edit this paragraph -->
-            New content is being added regularly, with the site kept focused on speed, simplicity, and smooth play.
-          </p>
+          <span class="story-date">Edit date</span>
+          <h2>Another story</h2>
+          <p>Use this card pattern to add more entries whenever you want to post updates or highlight new content.</p>
         </div>
       </article>
 
       <article class="story">
         <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80" alt="News and updates" />
         <div class="story-body">
-          <span class="story-date">August 2026</span>
-          <h2>Player experience improvements</h2>
-          <p>
-            <!-- Edit this paragraph -->
-            Better browsing options, better game categories, and more updates are being added to improve the overall experience.
-          </p>
+          <span class="story-date">Edit date</span>
+          <h2>New update</h2>
+          <p>Replace this block with an announcement, a gameplay note, a release date, or a site message you want to feature.</p>
         </div>
       </article>
     </div>
 
     <section class="section">
+      <span class="editable-note">Edit this block</span>
       <h2>Update notes</h2>
       <p>
-        <!-- Edit this section for future notes -->
-        Add new stories here whenever you want to post updates, announcements, release notes, or site improvements.
+        This is the section where you can write future notes, announce changes, or keep visitors informed about what is new on the site.
       </p>
     </section>
   </main>

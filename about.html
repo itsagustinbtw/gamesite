@@ -10,19 +10,25 @@
       --fg: #ffffff;
       --line: #212121;
       --panel: #ff5900;
-      --card: #ff5900;
+      --card: #121212;
     }
 
     * { box-sizing: border-box; }
-    body {
+
+    html, body {
       margin: 0;
-      padding: 0;
+      min-height: 100vh;
       background: var(--bg);
       color: var(--fg);
       font-family: Arial, Helvetica, sans-serif;
       line-height: 1.6;
     }
-    a { color: var(--fg); }
+
+    a {
+      color: var(--fg);
+      text-decoration: none;
+    }
+
     .topbar {
       background: var(--panel);
       border-bottom: 1px solid var(--line);
@@ -30,11 +36,13 @@
       top: 0;
       z-index: 20;
     }
+
     .wrap {
       max-width: 1100px;
       margin: 0 auto;
       padding: 12px 18px;
     }
+
     .nav {
       display: flex;
       align-items: center;
@@ -42,101 +50,134 @@
       gap: 14px;
       flex-wrap: wrap;
     }
+
     .brand {
       font-size: 0.95rem;
       letter-spacing: 0.08em;
       font-weight: 700;
       text-transform: uppercase;
+      color: var(--fg);
     }
+
     .links {
       display: flex;
       gap: 16px;
       flex-wrap: wrap;
     }
+
     .links a {
-      text-decoration: none;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       font-size: 0.75rem;
-      opacity: 0.92;
+      opacity: 0.96;
     }
+
     main {
       max-width: 1100px;
       margin: 0 auto;
-      padding: 28px 18px 60px;
+      padding: 26px 18px 60px;
     }
+
     .hero {
       display: grid;
       grid-template-columns: 1.2fr 0.8fr;
       gap: 24px;
       align-items: center;
-      margin-bottom: 30px;
+      margin-bottom: 28px;
     }
-    .hero h1 {
-      margin: 0 0 12px;
-      font-size: clamp(2.3rem, 5vw, 4rem);
-      line-height: 1.05;
-    }
+
     .eyebrow {
       margin: 0 0 10px;
-      color: var(--fg);
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      font-size: 0.77rem;
-      opacity: 0.85;
+      color: var(--fg);
+      opacity: 0.8;
     }
+
+    h1 {
+      margin: 0 0 14px;
+      font-size: clamp(2.2rem, 5vw, 4rem);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+    }
+
     .lead {
       margin: 0;
-      color: rgba(255,255,255,0.75);
-      font-size: 1.05rem;
+      color: rgba(255, 255, 255, 0.75);
+      font-size: 1.04rem;
+      max-width: 680px;
     }
-    .image-box {
-      min-height: 260px;
+
+    .photo-box {
       border: 1px solid var(--line);
-      background: linear-gradient(135deg, rgba(255,89,0,0.18), rgba(255,255,255,0.06));
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      background: rgba(255, 255, 255, 0.02);
+      min-height: 280px;
       overflow: hidden;
       border-radius: 18px;
     }
-    .image-box img {
+
+    .photo-box img {
+      display: block;
       width: 100%;
       height: 100%;
       object-fit: cover;
-      display: block;
     }
-    .grid {
+
+    .card-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 18px;
-      margin-top: 30px;
+      gap: 16px;
+      margin-top: 18px;
     }
+
     .card {
       border: 1px solid var(--line);
-      background: rgba(255,255,255,0.02);
-      padding: 18px;
+      background: rgba(255, 255, 255, 0.02);
       border-radius: 16px;
+      padding: 18px;
     }
+
     .card h2 {
       margin: 0 0 8px;
-      font-size: 1.1rem;
+      font-size: 1.15rem;
     }
+
     .card p {
       margin: 0;
-      color: rgba(255,255,255,0.76);
+      color: rgba(255, 255, 255, 0.78);
     }
-    .section {
-      margin-top: 30px;
+
+    .content-block {
+      margin-top: 28px;
       border-top: 1px solid var(--line);
       padding-top: 20px;
     }
-    .section h2 {
-      font-size: 1.6rem;
+
+    .content-block h2 {
       margin: 0 0 12px;
+      font-size: 1.5rem;
     }
+
+    .content-block p {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.74);
+      max-width: 900px;
+    }
+
+    .editable-note {
+      display: inline-block;
+      margin-bottom: 12px;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.62);
+    }
+
     @media (max-width: 720px) {
-      .hero { grid-template-columns: 1fr; }
+      .hero {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -155,40 +196,44 @@
   <main>
     <section class="hero">
       <div>
-        <p class="eyebrow">About our site</p>
-        <h1>Built for quick play, clean browsing, and easy updates.</h1>
+        <p class="eyebrow">About</p>
+        <h1>Built for quick play and clean browsing.</h1>
         <p class="lead">
-          <!-- Edit this text below to update the About page -->
-          AGU Games is a fast, lightweight game portal made for smooth browsing and simple updates.
-          The goal is to keep everything easy to use, easy to manage, and easy to customize.
+          Edit this text to describe your site, your brand, and what players can expect when they visit.
+          You can replace the paragraph below with your own story, intro, or mission statement.
         </p>
       </div>
-      <div class="image-box">
+
+      <div class="photo-box">
         <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=900&q=80" alt="Gaming setup" />
       </div>
     </section>
 
-    <div class="grid">
+    <div class="card-grid">
       <article class="card">
-        <h2>What we offer</h2>
-        <p>Fast loading game cards, simple search, and a smooth gaming experience without extra clutter.</p>
+        <span class="editable-note">Edit card 1</span>
+        <h2>What we do</h2>
+        <p>Replace this text with your main description, your focus, or the type of games your site is known for.</p>
       </article>
+
       <article class="card">
-        <h2>Easy to manage</h2>
-        <p>Everything is kept simple so you can update copy, add images, and adjust sections without needing a developer.</p>
+        <span class="editable-note">Edit card 2</span>
+        <h2>How we work</h2>
+        <p>Replace this with your process, your value, or the way your site keeps things fast and easy to use.</p>
       </article>
+
       <article class="card">
-        <h2>Built for players</h2>
-        <p>We focus on quick access, clear categories, and a clean interface that feels modern and easy to navigate.</p>
+        <span class="editable-note">Edit card 3</span>
+        <h2>Why players stay</h2>
+        <p>Replace this with your message about experience, simplicity, or the community you are building.</p>
       </article>
     </div>
 
-    <section class="section">
-      <h2>Our focus</h2>
+    <section class="content-block">
+      <span class="editable-note">Main content block</span>
+      <h2>About the site</h2>
       <p>
-        <!-- Edit this paragraph below -->
-        This site is designed to stay flexible, so new sections, images, and content can be added without major changes.
-        Use this page as your main description for the brand, the project, and the experience you want visitors to have.
+        This is the main editable section. Replace this paragraph with your own story, your brand message, or any important details you want visitors to see when they open the About page.
       </p>
     </section>
   </main>
