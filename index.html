@@ -6,11 +6,11 @@
     <title>AGU Games</title>
     <style>
         :root {
-            --bg: #000000;
+            --bg: #121212;
             --fg: #ffffff;
-            --line: #000000;
-            --panel: #000000;
-            --card: #000000;
+            --line: #212121;
+            --panel: #ff7300;
+            --card: #121212;
         }
 
         * { box-sizing: border-box; }
@@ -194,6 +194,12 @@
             flex-direction: column;
             cursor: pointer;
             min-height: 220px;
+            transition: transform 0.18s ease, filter 0.18s ease, border-color 0.18s ease;
+        }
+
+        .zone-item:hover {
+            transform: scale(1.02);
+            filter: brightness(1.02);
         }
 
         .zone-item img {
@@ -320,10 +326,10 @@
 
     <div class="palette-bar">
         <div class="customizer" aria-label="Customize colors">
-            <label>BG <input id="bgColor" type="color" value="#000000" aria-label="Background color"></label>
+            <label>BG <input id="bgColor" type="color" value="#121212" aria-label="Background color"></label>
             <label>TXT <input id="fgColor" type="color" value="#ffffff" aria-label="Text color"></label>
-            <label>LINE <input id="lineColor" type="color" value="#2a2a2a" aria-label="Line color"></label>
-            <label>PANEL <input id="panelColor" type="color" value="#000000" aria-label="Panel color"></label>
+            <label>LINE <input id="lineColor" type="color" value="#212121" aria-label="Line color"></label>
+            <label>PANEL <input id="panelColor" type="color" value="#ff5900" aria-label="Panel color"></label>
         </div>
     </div>
 
@@ -388,11 +394,11 @@
         let visibleCount = INITIAL_VISIBLE_GAMES;
 
         const defaultPalette = {
-            bg: '#000000',
+            bg: '#121212',
             fg: '#ffffff',
-            line: '#2a2a2a',
-            panel: '#000000',
-            card: '#000000'
+            line: '#212121',
+            panel: '#ff5900',
+            card: '#121212'
         };
 
         function applyPalette(palette) {
@@ -525,6 +531,13 @@
             'https://raw.githubusercontent.com/gn-math/assets/main/zones.json',
             'https://raw.githubusercontent.com/gn-math/assets/master/zones.json',
             'https://cdn.jsdelivr.net/gh/gn-math/assets@main/zones.json'
+        ];
+
+        const fallbackGames = [
+            { id: 1, name: 'Mini Racer', cover: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80', url: 'https://example.com', featured: true, special: ['arcade'] },
+            { id: 2, name: 'Math Sprint', cover: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80', url: 'https://example.com', special: ['math'] },
+            { id: 3, name: 'Puzzle Match', cover: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80', url: 'https://example.com', special: ['puzzle'] },
+            { id: 4, name: 'Reaction Run', cover: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80', url: 'https://example.com', special: ['arcade'] }
         ];
 
         const coverURL = 'https://raw.githubusercontent.com/gn-math/covers/main';
@@ -829,7 +842,21 @@
             }
 
             console.error('All catalog sources failed:', lastError);
-            container.textContent = 'Error loading games.';
+            zones = normalizeZones(fallbackGames);
+            if (!zones.length) {
+                container.textContent = 'Error loading games.';
+                return;
+            }
+            zones[0].featured = true;
+            filterOptions.innerHTML = '<option value="none">All tags</option>';
+            const tags = [...new Set(zones.flatMap(zone => Array.isArray(zone.special) ? zone.special : []))];
+            tags.forEach(tag => {
+                const opt = document.createElement('option');
+                opt.value = tag;
+                opt.textContent = toTitleCase(tag);
+                filterOptions.appendChild(opt);
+            });
+            sortZones();
         }
 
         function resetZoneFrame() {
@@ -852,7 +879,7 @@
         function openZone(file) {
             const url = makeAssetURL(file.url);
 
-            if (file.url.startsWith('http')) {
+            if (file.url && file.url.startsWith('http')) {
                 resetZoneFrame();
                 window.open(file.url, '_blank', 'noopener');
                 return;
@@ -866,14 +893,23 @@
                 })
                 .then(html => {
                     const cleaned = sanitizeGameHTML(html);
-                    zoneFrame.srcdoc = cleaned;
+                    if (cleaned && cleaned.includes('<html')) {
+                        zoneFrame.srcdoc = cleaned;
+                    } else {
+                        zoneFrame.src = url;
+                    }
                     document.getElementById('zoneName').textContent = file.name;
                     document.getElementById('zoneId').textContent = file.id;
                     zoneViewer.style.display = 'flex';
                 })
                 .catch(() => {
                     resetZoneFrame();
-                    window.open(url, '_blank', 'noopener');
+                    if (url && url !== 'https://example.com') {
+                        window.open(url, '_blank', 'noopener');
+                    } else {
+                        zoneViewer.style.display = 'none';
+                        container.textContent = 'This game is unavailable, but the site is still running normally.';
+                    }
                 });
         }
 
