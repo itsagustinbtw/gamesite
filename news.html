@@ -21,7 +21,11 @@
       background: var(--bg);
       color: var(--fg);
       font-family: Arial, Helvetica, sans-serif;
-      line-height: 1.6;
+      line-height: 1.5;
+    }
+
+    body {
+      background: var(--bg);
     }
 
     a {
@@ -38,16 +42,16 @@
     }
 
     .wrap {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 12px 18px;
+      padding: 8px 12px;
     }
 
     .nav {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 14px;
+      gap: 12px;
       flex-wrap: wrap;
     }
 
@@ -73,13 +77,13 @@
     }
 
     main {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 26px 18px 60px;
+      padding: 16px 14px 36px;
     }
 
     .hero {
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
 
     .eyebrow {
@@ -100,13 +104,13 @@
 
     .hero p {
       margin: 0;
-      color: rgba(255, 255, 255, 0.76);
-      max-width: 720px;
+      color: rgba(255, 255, 255, 0.8);
+      max-width: 760px;
     }
 
     .news-grid {
       display: grid;
-      gap: 18px;
+      gap: 12px;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     }
 
@@ -115,6 +119,11 @@
       background: var(--card);
       border-radius: 0;
       overflow: hidden;
+      transition: transform 0.18s ease;
+    }
+
+    .story:hover {
+      transform: scale(1.02);
     }
 
     .story img {
@@ -146,11 +155,11 @@
 
     .story p {
       margin: 0;
-      color: rgba(255, 255, 255, 0.75);
+      color: rgba(255, 255, 255, 0.78);
     }
 
     .section {
-      margin-top: 28px;
+      margin-top: 26px;
       border-top: 1px solid var(--line);
       padding-top: 18px;
     }
@@ -162,7 +171,7 @@
 
     .section p {
       margin: 0;
-      color: rgba(255, 255, 255, 0.74);
+      color: rgba(255, 255, 255, 0.76);
     }
 
     .editable-note {
@@ -231,5 +240,56 @@
       </p>
     </section>
   </main>
+
+  <script>
+    const defaultPalette = {
+      bg: '#121212',
+      fg: '#ffffff',
+      line: '#212121',
+      panel: '#ff5900',
+      card: '#ff5900'
+    };
+
+    function applyPalette(palette) {
+      const root = document.documentElement;
+      const values = {
+        '--bg': palette.bg || defaultPalette.bg,
+        '--fg': palette.fg || defaultPalette.fg,
+        '--line': palette.line || defaultPalette.line,
+        '--panel': palette.panel || palette.bg || defaultPalette.panel,
+        '--card': palette.card || palette.panel || palette.bg || defaultPalette.card
+      };
+
+      Object.entries(values).forEach(([key, value]) => {
+        root.style.setProperty(key, value);
+      });
+
+      document.body.style.background = values['--bg'];
+      localStorage.setItem('gamesitePalette', JSON.stringify(values));
+    }
+
+    function loadPalette() {
+      try {
+        const stored = JSON.parse(localStorage.getItem('gamesitePalette') || '{}');
+        const palette = {
+          bg: stored['--bg'] || defaultPalette.bg,
+          fg: stored['--fg'] || defaultPalette.fg,
+          line: stored['--line'] || defaultPalette.line,
+          panel: stored['--panel'] || defaultPalette.panel,
+          card: stored['--card'] || stored['--panel'] || defaultPalette.card
+        };
+        applyPalette(palette);
+      } catch (error) {
+        applyPalette(defaultPalette);
+      }
+    }
+
+    loadPalette();
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'gamesitePalette') {
+        loadPalette();
+      }
+    });
+  </script>
 </body>
 </html>
