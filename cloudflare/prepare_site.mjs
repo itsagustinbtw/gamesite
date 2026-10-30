@@ -10,6 +10,7 @@ const siteFiles = [
   "about.html",
   "news.html",
   "game-host-config.js",
+  "theme-store.js",
   "agus4.png",
   "grunge-halloween-background-with-evil-pumpkins-scary-ghost_1048-12867.avif"
 ];

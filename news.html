@@ -123,7 +123,7 @@
 
     .hero p {
       margin: 0;
-      color: rgba(255, 255, 255, 0.8);
+      color: color-mix(in srgb, var(--fg) 80%, transparent);
       max-width: 760px;
     }
 
@@ -164,7 +164,7 @@
       font-size: 0.72rem;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.8);
+      color: color-mix(in srgb, var(--fg) 80%, transparent);
     }
 
     .story h2 {
@@ -174,7 +174,7 @@
 
     .story p {
       margin: 0;
-      color: rgba(255, 255, 255, 0.78);
+      color: color-mix(in srgb, var(--fg) 78%, transparent);
     }
 
     .section {
@@ -190,7 +190,7 @@
 
     .section p {
       margin: 0;
-      color: rgba(255, 255, 255, 0.76);
+      color: color-mix(in srgb, var(--fg) 76%, transparent);
     }
 
     .editable-note {
@@ -199,7 +199,7 @@
       font-size: 0.7rem;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.62);
+      color: color-mix(in srgb, var(--fg) 62%, transparent);
     }
   </style>
 </head>
@@ -239,6 +239,7 @@
    
   </main>
 
+  <script src="theme-store.js"></script>
   <script>
     const defaultPalette = {
       bg: '#121212',
@@ -276,11 +277,11 @@
       localStorage.setItem('aguGamesBgBlur', String(clampedValue));
     }
 
-    function applyPageBackground() {
+    async function applyPageBackground() {
       const layer = document.getElementById('siteBackgroundLayer');
       if (!layer) return;
 
-      const customBg = localStorage.getItem('aguGamesCustomBg');
+      const customBg = await window.AguThemeStore.loadBackground();
       const halloweenOn = JSON.parse(localStorage.getItem('aguGamesHalloween') || 'false');
       const active = halloweenOn ? (customBg || DEFAULT_HALLOWEEN_BG) : (customBg || '');
 
@@ -312,10 +313,12 @@
 
     applyBackgroundBlur();
     loadPalette();
+    applyPageBackground();
     window.addEventListener('storage', (event) => {
-      if (event.key === 'gamesitePalette' || event.key === 'aguGamesCustomBg' || event.key === 'aguGamesHalloween' || event.key === 'aguGamesBgBlur') {
+      if (event.key === 'gamesitePalette' || event.key === 'aguGamesCustomBg' || event.key === 'aguGamesThemeVersion' || event.key === 'aguGamesHalloween' || event.key === 'aguGamesBgBlur') {
         applyBackgroundBlur();
         loadPalette();
+        applyPageBackground();
       }
     });
   </script>

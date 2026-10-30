@@ -434,6 +434,7 @@
     </div>
 
     <script src="game-host-config.js"></script>
+    <script src="theme-store.js"></script>
     <script>
         const container = document.getElementById('container');
         const allGamesSummary = document.getElementById('allGamesSummary');
@@ -544,6 +545,16 @@
             });
         }
 
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'gamesitePalette') loadPalette();
+            if (['aguGamesCustomBg', 'aguGamesThemeVersion', 'aguGamesHalloween', 'aguGamesBgBlur'].includes(event.key)) {
+                syncBackgroundState().then(() => {
+                    if (event.key === 'aguGamesHalloween') loadHalloweenTheme();
+                    updateDisableThemeButton();
+                }).catch((error) => console.warn('A saved theme change could not be applied.', error));
+            }
+        });
+
         function applyBackgroundBlur(valueOverride) {
             const rawValue = Number.parseFloat(valueOverride ?? localStorage.getItem('aguGamesBgBlur') ?? '1.5');
             const safeValue = Number.isFinite(rawValue) ? rawValue : 1.5;
@@ -596,7 +607,7 @@
             }
         }
 
-        function disableImageTheme() {
+        async function disableImageTheme() {
             const halloweenOn = document.body.classList.contains('halloween');
             const customBgSet = !!String(activeCustomBackground || localStorage.getItem('aguGamesCustomBg') || '').trim();
 
@@ -608,7 +619,7 @@
 
             if (customBgSet) {
                 activeCustomBackground = '';
-                localStorage.removeItem('aguGamesCustomBg');
+                await window.AguThemeStore.clearBackground();
                 applyBackgroundImage('');
             }
             if (bgImageInput) bgImageInput.value = '';
@@ -661,8 +672,8 @@
             }
         }
 
-        function loadCustomBackground() {
-            const saved = localStorage.getItem('aguGamesCustomBg');
+        async function loadCustomBackground() {
+            const saved = await window.AguThemeStore.loadBackground();
             if (saved && String(saved).trim()) {
                 activeCustomBackground = saved;
                 applyBackgroundImage(saved);
@@ -676,9 +687,9 @@
             updateDisableThemeButton();
         }
 
-        function syncBackgroundState() {
+        async function syncBackgroundState() {
             applyBackgroundBlur();
-            loadCustomBackground();
+            await loadCustomBackground();
         }
 
         function toggleHalloweenTheme() {
@@ -713,30 +724,23 @@
             }
         }
 
-        function handleBackgroundUpload(event) {
+        async function handleBackgroundUpload(event) {
             const input = event.target;
             const [file] = input.files || [];
             input.value = '';
             if (!file || !file.type.startsWith('image/')) return;
-
-            const reader = new FileReader();
-            reader.onload = () => {
-                const result = String(reader.result || '');
-                activeCustomBackground = result;
-                try {
-                    localStorage.setItem('aguGamesCustomBg', result);
-                } catch (error) {
-                    localStorage.removeItem('aguGamesCustomBg');
-                    console.warn('This image is too large to save between visits; it will remain active for this visit.', error);
+            try {
+                const result = await window.AguThemeStore.saveBackground(file);
+                activeCustomBackground = result.url;
+                applyBackgroundImage(result.url);
+                updateDisableThemeButton();
+                if (!result.saved) {
+                    console.warn('The background is active now, but browser storage did not allow it to be saved for later pages.');
                 }
-                applyBackgroundImage(result);
+            } catch (error) {
+                console.error('The selected background image could not be saved.', error);
                 updateDisableThemeButton();
-            };
-            reader.onerror = () => {
-                console.error('The selected background image could not be read.');
-                updateDisableThemeButton();
-            };
-            reader.readAsDataURL(file);
+            }
         }
 
         function normalizeFaviconInput(raw) {
@@ -1323,8 +1327,10 @@
         document.getElementById('downloadZoneButton').addEventListener('click', downloadZone);
         document.getElementById('closeZoneButton').addEventListener('click', closeZone);
         loadPalette();
-        loadHalloweenTheme();
-        syncBackgroundState();
+        syncBackgroundState().then(loadHalloweenTheme).catch((error) => {
+            console.error('Saved theme settings could not be loaded.', error);
+            loadHalloweenTheme();
+        });
         loadSiteSettings();
         initializeHalloweenSecret();
         updateDisableThemeButton();
