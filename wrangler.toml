@@ -5,3 +5,6 @@ compatibility_date = "2026-10-30"
 [[r2_buckets]]
 binding = "GAMES"
 bucket_name = "agu-games-html"
+
+[assets]
+directory = "./cloudflare/site"

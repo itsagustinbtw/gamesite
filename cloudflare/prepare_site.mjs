@@ -1,0 +1,22 @@
+import { mkdir, rm, copyFile } from "node:fs/promises";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const scriptDir = dirname(fileURLToPath(import.meta.url));
+const projectRoot = resolve(scriptDir, "..");
+const outputDir = join(scriptDir, "site");
+const siteFiles = [
+  "index.html",
+  "about.html",
+  "news.html",
+  "game-host-config.js",
+  "agus4.png",
+  "grunge-halloween-background-with-evil-pumpkins-scary-ghost_1048-12867.avif"
+];
+
+await rm(outputDir, { recursive: true, force: true });
+await mkdir(outputDir, { recursive: true });
+for (const file of siteFiles) {
+  await copyFile(join(projectRoot, file), join(outputDir, file));
+}
+console.log(`Prepared ${siteFiles.length} site assets in ${outputDir}`);
