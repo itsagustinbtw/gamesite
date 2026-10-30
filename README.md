@@ -12,9 +12,9 @@ Do not open `index.html` by double-clicking it. Browsers block a page opened wit
 
 The local server binds only to your own computer and maps `/games/` to `../HTML games/UGS Files/`.
 
-## Publish the site and games
+## Published site and games
 
-GitHub Pages hosts the small site interface. It cannot publish this game collection: the collection is about 2.8 GB, while GitHub Pages published sites may be no larger than 1 GB. The files therefore need a separate asset host.
+The main site is hosted on Cloudflare Pages at <https://agu-games-site.pages.dev/>. The Cloudflare Pages project is named `agu-games-site` and uses Direct Upload. The game collection is about 3.00 GB, so the site itself stays small while a separate service hosts game files.
 
 This project includes a Cloudflare Worker that serves game files from an R2 bucket, strips common ad markup while streaming HTML, and provides direct New Tab and Download responses. Cloudflare R2 currently includes 10 GB of standard storage and has no egress charge; usage above included storage or operation allowances can be billed. Its public `r2.dev` URL is rate-limited, so the Worker endpoint is used instead.
 
@@ -26,7 +26,7 @@ This project includes a Cloudflare Worker that serves game files from an R2 buck
 4. Upload the games: `python3 upload_games_to_r2.py`. This uploads about 3.00 GB; it can be safely rerun to retry failed files. Wrangler caps individual uploads at 300 MiB, so files over that size use R2's S3 multipart API. For those, install `boto3` and set `R2_ACCOUNT_ID`, `R2_S3_ACCESS_KEY_ID`, and `R2_S3_SECRET_ACCESS_KEY` using a short-lived token scoped to this bucket.
 5. Copy the Worker URL printed by Wrangler (this repository is connected to the Worker named `history`). Its game base URL is that URL plus `/games/`.
 6. In GitHub, open **Settings → Secrets and variables → Actions → Variables** and add `AGU_GAME_BASE_URL` with the Worker game base URL (for example, `https://history.<your-subdomain>.workers.dev/games/`).
-7. Push to `main`. The Pages workflow writes that variable into `game-host-config.js` for the published site.
+7. The current Cloudflare Pages site was uploaded directly from the dashboard. To publish a site update, use **Workers & Pages → agu-games-site → Create deployment**, then upload a folder containing `index.html`, `about.html`, `news.html`, `game-host-config.js`, `agus4.png`, and `grunge-halloween-background-with-evil-pumpkins-scary-ghost_1048-12867.avif`. Keep the game host URL in `game-host-config.js` set to `https://history.mathandscience.workers.dev/games/`.
 
 The bucket and account are private resources. Create the bucket in the same Cloudflare account used by the connected Worker Builds project before deploying; otherwise `wrangler deploy` fails with “R2 bucket not found.” The first deployment and upload also require Cloudflare login. The site can still be published to GitHub before that; local play works as soon as you run the local server.
 
@@ -38,9 +38,9 @@ The Cloudflare account is currently on the Workers Free plan, which stops Worker
 
 A $0.01 account budget alert is configured as an early warning. Cloudflare budget alerts are notifications only; they do not cap spending. Free usage is conditional on these plan and quota limits remaining in place, and R2 allowances are shared by the Cloudflare account. Check **Billing → Billable usage** if other Cloudflare resources are added.
 
-## GitHub Pages
+## GitHub Pages mirror
 
-The repository deploys through `.github/workflows/pages.yml`. In the repository's **Settings → Pages**, select **GitHub Actions** as the source.
+The repository still has a GitHub Pages workflow in `.github/workflows/pages.yml`; the Cloudflare Pages URL above is the primary hosted site. GitHub Pages can remain as a mirror or fallback.
 
 ## Browser settings
 
