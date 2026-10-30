@@ -297,6 +297,14 @@
             overflow: hidden;
         }
 
+        #zoneActionStatus {
+            display: none;
+            padding: 10px 14px;
+            color: var(--text, #fff);
+            background: rgba(180, 60, 60, .9);
+            font-size: .95rem;
+        }
+
         .zone-header {
             display: flex;
             align-items: center;
@@ -415,12 +423,13 @@
                 <span id="zoneId"></span>
             </div>
             <div class="zone-controls">
-                <button type="button" onclick="fullscreenZone()">Full</button>
-                <button type="button" onclick="aboutBlank()">New Tab</button>
-                <button type="button" onclick="downloadZone()">Download</button>
-                <button type="button" onclick="closeZone()">Close</button>
+                <button id="fullscreenZoneButton" type="button">Full</button>
+                <button id="newTabZoneButton" type="button">New Tab</button>
+                <button id="downloadZoneButton" type="button">Download</button>
+                <button id="closeZoneButton" type="button">Close</button>
             </div>
         </div>
+        <div id="zoneActionStatus" role="status" aria-live="polite"></div>
         <iframe id="zoneFrame" allowfullscreen="true" allow="fullscreen; autoplay; clipboard-write; encrypted-media; picture-in-picture"></iframe>
     </div>
 
@@ -872,6 +881,18 @@
             return path;
         }
 
+        function hasConfiguredGameHost() {
+            const localHost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+            return localHost || Boolean(String(window.AGU_GAME_BASE_URL || '').trim());
+        }
+
+        function showZoneActionStatus(message) {
+            const status = document.getElementById('zoneActionStatus');
+            if (!status) return;
+            status.textContent = message;
+            status.style.display = message ? 'block' : 'none';
+        }
+
         const GAME_AD_SELECTORS = [
             '#sidebarad1', '#sidebarad2', '#ad-container', '#ad-container-top', '#ad-container-bottom',
             '#ad-banner', '#ad-banner-top', '#advertisement', '#advertisement-container',
@@ -1117,6 +1138,8 @@
         function openZone(file) {
             if (!file || !file.url) return;
 
+            showZoneActionStatus('');
+
             const url = makeAssetURL(file.url);
 
             resetZoneFrame();
@@ -1124,6 +1147,11 @@
             document.getElementById('zoneId').textContent = file.id;
             document.body.classList.add('zone-open');
             zoneViewer.style.display = 'flex';
+
+            if (!hasConfiguredGameHost()) {
+                showZoneActionStatus('Online game files are not connected yet. Run start-local.command to play locally, or configure the online game host.');
+                return;
+            }
 
             zoneLoadTimeout = setTimeout(() => {
                 if (zoneViewer.style.display !== 'none') {
@@ -1164,6 +1192,7 @@
                 })
                 .catch(error => {
                     console.warn('Could not pre-clean the game; loading it directly.', error);
+                    showZoneActionStatus('Could not verify this game file. The game host may be unavailable.');
                     setGameFrame(url);
                 });
         }
@@ -1177,21 +1206,37 @@
             const id = document.getElementById('zoneId').textContent;
             const zone = zones.find(item => String(item.id) === String(id));
             if (!zone) return;
+            if (!hasConfiguredGameHost()) {
+                showZoneActionStatus('Online game files are not connected yet. Run start-local.command to play locally, or configure the online game host.');
+                return;
+            }
             const url = new URL(makeAssetURL(zone.url));
             url.searchParams.set('clean', '1');
             window.open(url.href, '_blank', 'noopener,noreferrer');
         }
-        function downloadZone() {
+        async function downloadZone() {
             const id = document.getElementById('zoneId').textContent;
             const zone = zones.find(item => String(item.id) === String(id));
             if (!zone) return;
+            showZoneActionStatus('');
+            if (!hasConfiguredGameHost()) {
+                showZoneActionStatus('Online game files are not connected yet. Run start-local.command to download locally, or configure the online game host.');
+                return;
+            }
             const url = makeAssetURL(zone.url);
             const downloadUrl = new URL(url);
             downloadUrl.searchParams.set('download', '1');
-            const a = document.createElement('a');
-            a.href = downloadUrl.href;
-            a.download = `${zone.name || 'game'}.html`;
-            a.click();
+            try {
+                const response = await fetch(downloadUrl.href, { method: 'HEAD', cache: 'no-store' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const a = document.createElement('a');
+                a.href = downloadUrl.href;
+                a.download = `${zone.name || 'game'}.html`;
+                a.click();
+            } catch (error) {
+                console.warn('Game download is unavailable.', error);
+                showZoneActionStatus('This game could not be downloaded because its file is unavailable. Check the game host and try again.');
+            }
         }
         function fullscreenZone() {
             const target = zoneFrame;
@@ -1273,6 +1318,10 @@
         }
 
         bindPaletteInputs();
+        document.getElementById('fullscreenZoneButton').addEventListener('click', fullscreenZone);
+        document.getElementById('newTabZoneButton').addEventListener('click', aboutBlank);
+        document.getElementById('downloadZoneButton').addEventListener('click', downloadZone);
+        document.getElementById('closeZoneButton').addEventListener('click', closeZone);
         loadPalette();
         loadHalloweenTheme();
         syncBackgroundState();
