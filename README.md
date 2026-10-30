@@ -30,6 +30,14 @@ This project includes a Cloudflare Worker that serves game files from an R2 buck
 
 The bucket and account are private resources. Create the bucket in the same Cloudflare account used by the connected Worker Builds project before deploying; otherwise `wrangler deploy` fails with “R2 bucket not found.” The first deployment and upload also require Cloudflare login. The site can still be published to GitHub before that; local play works as soon as you run the local server.
 
+### Cost safeguards
+
+The R2 bucket uses Standard storage and is private; public game requests go through the `history` Worker. The source collection is about 3.00 GB (decimal), below R2's included 10 GB-month, and the initial upload is about 2,966 HTML objects, below the included 1 million Class A operations. R2 has no egress fee.
+
+The Cloudflare account is currently on the Workers Free plan, which stops Worker requests at 100,000 per day. This Worker makes at most one R2 read per request, so even 31 days at that account-wide cap is at most 3.1 million Class B reads, below R2's included 10 million per month. Requests above the Workers Free limit fail instead of moving this Worker to a paid plan. Keep the Workers plan on Free and the bucket on Standard; do not upgrade the plan or switch to Infrequent Access.
+
+A $0.01 account budget alert is configured as an early warning. Cloudflare budget alerts are notifications only; they do not cap spending. Free usage is conditional on these plan and quota limits remaining in place, and R2 allowances are shared by the Cloudflare account. Check **Billing → Billable usage** if other Cloudflare resources are added.
+
 ## GitHub Pages
 
 The repository deploys through `.github/workflows/pages.yml`. In the repository's **Settings → Pages**, select **GitHub Actions** as the source.
