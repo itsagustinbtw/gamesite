@@ -11,6 +11,35 @@ const AD_SCRIPT_HOSTS = [
 
 const AD_CLASS_OR_ID = /(^|[\s_-])(?:ad|ads|advert|advertisement|adslot|adcontainer|adwrapper|adbanner)(?:$|[\s\d_-])/i;
 
+// Wrangler's local file uploader caps individual files at 300 MiB. This game is split
+// into two R2 objects and streamed back as one HTML response.
+const SPLIT_GAMES = {
+  "clrabbithole106.html": ["clrabbithole106.html.part1", "clrabbithole106.html.part2"]
+};
+
+function joinStreams(streams) {
+  const readers = streams.map(stream => stream.getReader());
+  let current = 0;
+  return new ReadableStream({
+    async pull(controller) {
+      while (current < readers.length) {
+        const { done, value } = await readers[current].read();
+        if (done) {
+          readers[current].releaseLock();
+          current++;
+          continue;
+        }
+        controller.enqueue(value);
+        return;
+      }
+      controller.close();
+    },
+    async cancel(reason) {
+      await Promise.all(readers.slice(current).map(reader => reader.cancel(reason).catch(() => {})));
+    }
+  });
+}
+
 function corsHeaders(origin = "*") {
   return {
     "Access-Control-Allow-Origin": origin,
@@ -73,10 +102,25 @@ export default {
     if (!key || key.split("/").some(part => part === "..")) {
       return new Response("Invalid game path", { status: 400, headers });
     }
+    if (/\.part\d+$/i.test(key)) return new Response("Not found", { status: 404, headers });
 
-    const object = request.method === "HEAD"
-      ? await env.GAMES.head(key)
-      : await env.GAMES.get(key);
+    const splitParts = SPLIT_GAMES[key];
+    let object;
+    let splitObjects;
+    if (splitParts) {
+      splitObjects = await Promise.all(splitParts.map(part =>
+        request.method === "HEAD" ? env.GAMES.head(part) : env.GAMES.get(part)
+      ));
+      if (splitObjects.some(part => !part)) return new Response("Game not found", { status: 404, headers });
+      object = {
+        size: splitObjects.reduce((total, part) => total + part.size, 0),
+        httpEtag: `W/\"${splitObjects.map(part => part.httpEtag || part.etag || "").join("-")}\"`
+      };
+    } else {
+      object = request.method === "HEAD"
+        ? await env.GAMES.head(key)
+        : await env.GAMES.get(key);
+    }
     if (!object) return new Response("Game not found", { status: 404, headers });
 
     const responseHeaders = new Headers(headers);
@@ -94,8 +138,14 @@ export default {
       return new Response(null, { headers: responseHeaders });
     }
 
-    let response = new Response(object.body, { status: 200, headers: responseHeaders });
-    if (/\.html?$/i.test(key)) response = addAdCleaner(response);
+    const body = splitParts
+      ? joinStreams(splitObjects.map(part => part.body))
+      : object.body;
+    let response = new Response(body, { status: 200, headers: responseHeaders });
+    if (/\.html?$/i.test(key)) {
+      response.headers.delete("Content-Length");
+      response = addAdCleaner(response);
+    }
     return response;
   }
 };
