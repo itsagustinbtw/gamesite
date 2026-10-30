@@ -24,11 +24,11 @@ This project includes a Cloudflare Worker that serves game files from an R2 buck
 2. Create the bucket: `npx --yes wrangler@4.156.0 r2 bucket create agu-games-html`.
 3. Deploy the Worker: `npx --yes wrangler@4.156.0 deploy`.
 4. Upload the games: `python3 upload_games_to_r2.py`. This uploads about 2.8 GB; it can be safely rerun to retry failed files.
-5. Copy the Worker URL printed by Wrangler. Its game base URL is that URL plus `/games/`.
-6. In GitHub, open **Settings → Secrets and variables → Actions → Variables** and add `AGU_GAME_BASE_URL` with the Worker game base URL (for example, `https://agu-games-assets.<your-subdomain>.workers.dev/games/`).
+5. Copy the Worker URL printed by Wrangler (this repository is connected to the Worker named `history`). Its game base URL is that URL plus `/games/`.
+6. In GitHub, open **Settings → Secrets and variables → Actions → Variables** and add `AGU_GAME_BASE_URL` with the Worker game base URL (for example, `https://history.<your-subdomain>.workers.dev/games/`).
 7. Push to `main`. The Pages workflow writes that variable into `game-host-config.js` for the published site.
 
-The bucket and account are private resources, so the first deployment and upload require your Cloudflare login. The site can still be published to GitHub before that; local play works as soon as you run the local server.
+The bucket and account are private resources. Create the bucket in the same Cloudflare account used by the connected Worker Builds project before deploying; otherwise `wrangler deploy` fails with “R2 bucket not found.” The first deployment and upload also require Cloudflare login. The site can still be published to GitHub before that; local play works as soon as you run the local server.
 
 ## GitHub Pages
 
