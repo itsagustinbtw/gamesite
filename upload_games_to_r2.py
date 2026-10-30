@@ -8,13 +8,11 @@ import os
 import shutil
 import subprocess
 import sys
-import tempfile
 
 
 SITE_ROOT = Path(__file__).resolve().parent
 GAME_ROOT = SITE_ROOT.parent / "HTML games" / "UGS Files"
-MAX_UPLOAD_BYTES = 250 * 1024 * 1024
-COPY_BLOCK_BYTES = 8 * 1024 * 1024
+WRANGLER_UPLOAD_LIMIT = 300 * 1024 * 1024
 
 
 def main():
@@ -60,35 +58,52 @@ def main():
                 return detail or f"wrangler exited {completed.returncode}"
             return None
 
-        if path.stat().st_size <= 300 * 1024 * 1024:
+        if path.stat().st_size <= WRANGLER_UPLOAD_LIMIT:
             error = put_file(path.name, path)
             if error:
                 return path.name, error
         else:
-            # Wrangler caps a single local upload at 300 MiB. Store oversized HTML
-            # files in chunks; the Worker joins this game's parts in one response.
-            with tempfile.TemporaryDirectory(prefix="game-parts-", dir=SITE_ROOT / ".wrangler") as temporary:
-                with path.open("rb") as source:
-                    part_number = 1
-                    while True:
-                        part_path = Path(temporary) / f"{path.name}.part{part_number}"
-                        copied = 0
-                        with part_path.open("wb") as part:
-                            while copied < MAX_UPLOAD_BYTES:
-                                block = source.read(min(COPY_BLOCK_BYTES, MAX_UPLOAD_BYTES - copied))
-                                if not block:
-                                    break
-                                part.write(block)
-                                copied += len(block)
-                        if not copied:
-                            part_path.unlink()
-                            break
-                        error = put_file(f"{path.name}.part{part_number}", part_path)
-                        if error:
-                            return path.name, error
-                        part_number += 1
-                        if copied < MAX_UPLOAD_BYTES:
-                            break
+            # Wrangler caps one local upload at 300 MiB. Use R2's S3 multipart API
+            # for larger files with a bucket-scoped token supplied through env vars.
+            access_key = os.environ.get("R2_S3_ACCESS_KEY_ID", "")
+            secret_key = os.environ.get("R2_S3_SECRET_ACCESS_KEY", "")
+            account_id = os.environ.get("R2_ACCOUNT_ID", "")
+            if not (access_key and secret_key and account_id):
+                return path.name, (
+                    "files over 300 MiB need a short-lived, bucket-scoped R2 S3 token; "
+                    "set R2_ACCOUNT_ID, R2_S3_ACCESS_KEY_ID, and R2_S3_SECRET_ACCESS_KEY"
+                )
+            try:
+                import boto3
+                from boto3.s3.transfer import TransferConfig
+                from botocore.config import Config
+                client = boto3.client(
+                    "s3",
+                    endpoint_url=f"https://{account_id}.r2.cloudflarestorage.com",
+                    region_name="auto",
+                    aws_access_key_id=access_key,
+                    aws_secret_access_key=secret_key,
+                    config=Config(request_checksum_calculation="when_required", response_checksum_validation="when_required"),
+                )
+                client.upload_file(
+                    str(path), args.bucket, path.name,
+                    ExtraArgs={
+                        "ContentType": "text/html; charset=utf-8",
+                        "ContentDisposition": "inline",
+                        "CacheControl": "public, max-age=86400",
+                    },
+                    Config=TransferConfig(
+                        multipart_threshold=64 * 1024 * 1024,
+                        multipart_chunksize=64 * 1024 * 1024,
+                        max_concurrency=4,
+                        use_threads=True,
+                    ),
+                )
+                uploaded = client.head_object(Bucket=args.bucket, Key=path.name)
+                if uploaded["ContentLength"] != path.stat().st_size:
+                    return path.name, f"uploaded size mismatch: expected {path.stat().st_size}, got {uploaded['ContentLength']}"
+            except Exception as error:
+                return path.name, f"S3 multipart upload failed: {error}"
         return path.name, None
 
     failures = []
