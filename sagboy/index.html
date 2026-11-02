@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sag Boy</title>
+  <style>
+    :root {
+      --bg: #121212;
+      --fg: #ffffff;
+      --line: #212121;
+      --panel: #ff5900;
+      --card: #ff5900;
+      --bg-blur: 1.5px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.5;
+    }
+
+    body {
+      position: relative;
+      background: var(--bg);
+    }
+
+    #siteBackgroundLayer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0;
+      pointer-events: none;
+      filter: blur(var(--bg-blur)) brightness(0.8);
+    }
+
+    body > *:not(#siteBackgroundLayer) {
+      position: relative;
+      z-index: 1;
+    }
+
+    a {
+      color: var(--fg);
+      text-decoration: none;
+    }
+
+    .topbar {
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 8px 12px;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      font-size: 0.95rem;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--fg);
+    }
+
+    .links {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .links a {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.75rem;
+      opacity: 0.96;
+    }
+
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 14px 48px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      background: rgba(255, 89, 0, 0.12);
+      backdrop-filter: blur(2px);
+      padding: 20px;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: color-mix(in srgb, var(--fg) 82%, transparent);
+    }
+
+    h1 {
+      margin: 0 0 14px;
+      font-size: clamp(2.6rem, 7vw, 5rem);
+      line-height: 0.98;
+      letter-spacing: -0.05em;
+    }
+
+    .lead {
+      margin: 0 0 20px;
+      max-width: 700px;
+      color: color-mix(in srgb, var(--fg) 82%, transparent);
+      font-size: 1.02rem;
+    }
+
+    .editor-box {
+      border: 1px solid var(--line);
+      background: var(--card);
+      min-height: 220px;
+      padding: 18px 18px 16px;
+      outline: none;
+      font-size: clamp(1.5rem, 3vw, 2.6rem);
+      line-height: 1.2;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      color: var(--fg);
+      white-space: pre-wrap;
+      word-break: break-word;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+    }
+
+    .editor-box:empty::before {
+      content: "Sag Boy\AClick here and type anything.";
+      white-space: pre-wrap;
+      opacity: 0.8;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 12px;
+    }
+
+    .toolbar button {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--fg);
+      padding: 8px 12px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.72rem;
+    }
+
+    @media (max-width: 720px) {
+      main {
+        padding-top: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="siteBackgroundLayer" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="wrap nav">
+      <div class="brand">AGU Games</div>
+      <nav class="links" aria-label="Main navigation">
+        <a href="/index.html">Home</a>
+        <a href="/about.html">About</a>
+        <a href="/news.html">News</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <p class="eyebrow">Secret page</p>
+      <h1>Sag Boy</h1>
+      <p class="lead">Click the box below and edit the text. It saves on this browser so your notes stick around.</p>
+      <div id="sagBoyEditor" class="editor-box" contenteditable="true" spellcheck="false" aria-label="Edit Sag Boy text"></div>
+      <div class="toolbar">
+        <button id="resetSagBoyText" type="button">Reset text</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="/theme-store.js"></script>
+  <script>
+    const defaultPalette = {
+      bg: '#121212',
+      fg: '#ffffff',
+      line: '#212121',
+      panel: '#ff5900',
+      card: '#ff5900'
+    };
+
+    const DEFAULT_HALLOWEEN_BG = 'grunge-halloween-background-with-evil-pumpkins-scary-ghost_1048-12867.avif';
+    const defaultText = 'Sag Boy<br>Click here and type anything you want.';
+
+    function applyPalette(palette) {
+      const root = document.documentElement;
+      const values = {
+        '--bg': palette.bg || defaultPalette.bg,
+        '--fg': palette.fg || defaultPalette.fg,
+        '--line': palette.line || defaultPalette.line,
+        '--panel': palette.panel || palette.bg || defaultPalette.panel,
+        '--card': palette.card || palette.panel || palette.bg || defaultPalette.card
+      };
+
+      Object.entries(values).forEach(([key, value]) => {
+        root.style.setProperty(key, value);
+      });
+
+      document.body.style.background = values['--bg'];
+      localStorage.setItem('gamesitePalette', JSON.stringify(values));
+    }
+
+    function applyBackgroundBlur(valueOverride) {
+      const rawValue = Number.parseFloat(valueOverride ?? localStorage.getItem('aguGamesBgBlur') ?? '1.5');
+      const safeValue = Number.isFinite(rawValue) ? rawValue : 1.5;
+      const clampedValue = Math.min(8, Math.max(0, safeValue));
+      document.documentElement.style.setProperty('--bg-blur', `${clampedValue}px`);
+      localStorage.setItem('aguGamesBgBlur', String(clampedValue));
+    }
+
+    async function applyPageBackground() {
+      const layer = document.getElementById('siteBackgroundLayer');
+      if (!layer) return;
+
+      const customBg = await window.AguThemeStore.loadBackground();
+      const halloweenOn = JSON.parse(localStorage.getItem('aguGamesHalloween') || 'false');
+      const active = halloweenOn ? (customBg || DEFAULT_HALLOWEEN_BG) : (customBg || '');
+
+      if (active) {
+        layer.style.backgroundImage = `url("${active}")`;
+        layer.style.opacity = '1';
+      } else {
+        layer.style.backgroundImage = 'none';
+        layer.style.opacity = '0';
+      }
+    }
+
+    function loadPalette() {
+      try {
+        const stored = JSON.parse(localStorage.getItem('gamesitePalette') || '{}');
+        const palette = {
+          bg: stored['--bg'] || defaultPalette.bg,
+          fg: stored['--fg'] || defaultPalette.fg,
+          line: stored['--line'] || defaultPalette.line,
+          panel: stored['--panel'] || defaultPalette.panel,
+          card: stored['--card'] || stored['--panel'] || defaultPalette.card
+        };
+        applyPalette(palette);
+      } catch (error) {
+        applyPalette(defaultPalette);
+      }
+      applyPageBackground();
+    }
+
+    function setEditorText(value) {
+      const editor = document.getElementById('sagBoyEditor');
+      editor.innerHTML = value || defaultText;
+      localStorage.setItem('sagboy-secret-text', editor.innerHTML);
+    }
+
+    const editor = document.getElementById('sagBoyEditor');
+    const savedText = localStorage.getItem('sagboy-secret-text') || defaultText;
+    editor.innerHTML = savedText;
+    editor.addEventListener('input', () => {
+      localStorage.setItem('sagboy-secret-text', editor.innerHTML);
+    });
+
+    document.getElementById('resetSagBoyText').addEventListener('click', () => {
+      setEditorText(defaultText);
+    });
+
+    applyBackgroundBlur();
+    loadPalette();
+    applyPageBackground();
+
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'gamesitePalette' || event.key === 'aguGamesCustomBg' || event.key === 'aguGamesThemeVersion' || event.key === 'aguGamesHalloween' || event.key === 'aguGamesBgBlur') {
+        applyBackgroundBlur();
+        loadPalette();
+        applyPageBackground();
+      }
+    });
+  </script>
+</body>
+</html>

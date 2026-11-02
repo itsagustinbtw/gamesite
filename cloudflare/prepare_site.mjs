@@ -9,6 +9,8 @@ const siteFiles = [
   "index.html",
   "about.html",
   "news.html",
+  "sagboy.html",
+  "sagboy/index.html",
   "game-host-config.js",
   "theme-store.js",
   "agus4.png",
@@ -18,6 +20,9 @@ const siteFiles = [
 await rm(outputDir, { recursive: true, force: true });
 await mkdir(outputDir, { recursive: true });
 for (const file of siteFiles) {
-  await copyFile(join(projectRoot, file), join(outputDir, file));
+  const sourcePath = join(projectRoot, file);
+  const destinationPath = join(outputDir, file);
+  await mkdir(dirname(destinationPath), { recursive: true });
+  await copyFile(sourcePath, destinationPath);
 }
 console.log(`Prepared ${siteFiles.length} site assets in ${outputDir}`);
